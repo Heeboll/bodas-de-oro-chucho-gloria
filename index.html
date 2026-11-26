@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventify | Bodas de Oro de Chucho & Gloria</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playfair Display & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        gold: {
+                            50: '#fbf8f1',
+                            100: '#f5eedc',
+                            200: '#eadab8',
+                            300: '#dec08b',
+                            400: '#d1a35d',
+                            500: '#c58b3c',
+                            600: '#b67330',
+                            700: '#975829',
+                            800: '#7b4827',
+                            900: '#643b23',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animaciones suaves y barra de desplazamiento personalizada */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #fbf8f1; }
+        ::-webkit-scrollbar-thumb { background: #dec08b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c58b3c; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Ocultar scrollbar en navegación móvil */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Evitar zoom automático en inputs al enfocar en iOS/Android */
+        @media (max-width: 640px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased selection:bg-gold-200 selection:text-gold-900 overflow-x-hidden">
+
+    <!-- Notificación Flotante (Toast) -->
+    <div id="toast-container" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-5 sm:bottom-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Encabezado Hero con Foto de Homenajeados -->
+    <header class="relative bg-stone-900 text-white overflow-hidden shadow-xl">
+        <!-- Imagen de fondo con superposición elegante -->
+        <div class="absolute inset-0 opacity-35">
+            <img id="hero-bg-img" src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1920&q=80" 
+                 onerror="this.src='https://placehold.co/1920x600/292524/d1a35d?text=Bodas+de+Oro+Chucho+%26+Gloria'"
+                 alt="Chucho y Gloria" class="w-full h-full object-cover object-center">
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/75 to-stone-900/50"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-10 sm:pb-12">
+            <!-- Barra Superior: Marca, Sincronización y Botón Compartir -->
+            <div class="flex items-center justify-between gap-2 border-b border-white/15 pb-3.5 sm:pb-4 mb-6 sm:mb-8">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-white shadow-lg shrink-0">
+                        <i class="fa-solid fa-rings-wedding text-base sm:text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg sm:text-xl tracking-tight text-white">Eventify</span>
+                        <span class="inline-block ml-1.5 text-[11px] sm:text-xs px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-200 border border-gold-400/30">
+                            <i class="fa-solid fa-circle text-[7px] text-emerald-400 mr-1 animate-pulse"></i><span data-i18n="live">En vivo</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 sm:gap-3">
+                    <!-- Selector de Idioma / Language Switcher -->
+                    <div id="lang-switcher" class="flex items-center rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm p-0.5 shrink-0">
+                        <button id="lang-btn-es" onclick="setLanguage('es')" class="min-h-[32px] sm:min-h-[36px] px-2 sm:px-3 py-1 rounded-[10px] text-xs sm:text-sm font-semibold transition">ES</button>
+                        <button id="lang-btn-en" onclick="setLanguage('en')" class="min-h-[32px] sm:min-h-[36px] px-2 sm:px-3 py-1 rounded-[10px] text-xs sm:text-sm font-semibold transition">EN</button>
+                    </div>
+
+                    <!-- Selector de Modo (Invitado vs Organizador protegido por PIN) -->
+                    <button id="toggle-admin-btn" onclick="toggleAdminMode()" class="min-h-[40px] px-2.5 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/20 backdrop-blur-sm transition flex items-center gap-1.5 sm:gap-2">
+                        <i id="admin-mode-icon" class="fa-solid fa-lock text-gold-300"></i>
+                        <span id="admin-mode-label" class="hidden sm:inline" data-i18n="adminAccess">Acceso Organizador</span>
+                        <span id="admin-mode-label-mobile" class="sm:hidden" data-i18n="adminMobile">Organizador</span>
+                    </button>
+
+                    <!-- Botón Compartir Enlace -->
+                    <button onclick="copyEventLink()" class="min-h-[40px] px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gold-500 hover:bg-gold-600 active:scale-95 text-white shadow-md transition flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span class="hidden xs:inline sm:inline" data-i18n="share">Compartir</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Información Principal del Evento -->
+            <div class="flex flex-col md:flex-row items-center md:items-end justify-between gap-5 sm:gap-6">
+                <div class="text-center md:text-left w-full">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/20 border border-gold-400/40 text-gold-200 text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2.5 sm:mb-3">
+                        <i class="fa-solid fa-sparkles"></i> <span data-i18n="heroTagline">50 Años de Amor y Familia</span>
+                    </div>
+                    <h1 id="event-title-display" class="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-3 drop-shadow leading-tight">
+                        Bodas de Oro de Chucho & Gloria
+                    </h1>
+                    <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center md:justify-start gap-2.5 sm:gap-4 text-xs sm:text-base text-stone-200">
+                        <span class="flex items-center gap-2 bg-white/10 sm:bg-transparent px-3 py-1.5 sm:p-0 rounded-xl w-full sm:w-auto justify-center">
+                            <i class="fa-regular fa-calendar-check text-gold-400 shrink-0"></i>
+                            <span id="event-date-display">Domingo 10 de enero de 2027, a partir de las 12:00 m.</span>
+                        </span>
+                        <span class="hidden sm:inline text-stone-500">•</span>
+                        <a id="event-map-link" href="https://www.google.com/maps/search/?api=1&query=Club+Los+Buhos+Cl.+200+%2355-79+Bogota+Cundinamarca" target="_blank" rel="noopener noreferrer" 
+                           class="flex items-center gap-2 bg-white/10 sm:bg-transparent px-3 py-2 sm:p-0 rounded-xl w-full sm:w-auto justify-center hover:text-gold-300 underline decoration-gold-400/50 underline-offset-4 transition active:scale-98">
+                            <i class="fa-solid fa-location-dot text-gold-400 shrink-0"></i>
+                            <span id="event-location-display" class="text-left sm:text-center">Club Los Buhos, Cl. 200 #55-79, Bogotá, Cundinamarca</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs shrink-0"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Botón Editar Encabezado (Solo Organizador) -->
+                <div class="admin-only w-full sm:w-auto flex justify-center">
+                    <button onclick="openSettingsModal()" class="min-h-[40px] w-full sm:w-auto justify-center px-3.5 py-2 rounded-xl bg-stone-800/80 hover:bg-stone-700 text-stone-200 border border-stone-600 text-xs font-medium flex items-center gap-2 transition">
+                        <i class="fa-solid fa-camera text-gold-400"></i> <span data-i18n="changePhoto">Cambiar Foto / Datos</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 -mt-5 sm:-mt-6 relative z-10 pb-16">
+        
+        <!-- Tarjetas de Resumen Ejecutivo (KPIs en tiempo real - Solo Administradores) -->
+        <section class="admin-only grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-5 mb-6 sm:mb-8">
+            <div class="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base sm:text-xl shrink-0">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-medium text-stone-500 uppercase tracking-wider truncate" data-i18n="kpiConfirmed">Confirmados</p>
+                    <div class="flex items-baseline gap-1.5 flex-wrap">
+                        <h2 id="stat-total-attendees" class="text-xl sm:text-3xl font-bold text-stone-900">0</h2>
+                        <span id="stat-confirmed-groups" class="text-[11px] sm:text-xs text-emerald-600 font-medium">(0 inv.)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-base sm:text-xl shrink-0">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-medium text-stone-500 uppercase tracking-wider truncate" data-i18n="kpiPending">Por Confirmar</p>
+                    <div class="flex items-baseline gap-1.5 flex-wrap">
+                        <h2 id="stat-pending" class="text-xl sm:text-3xl font-bold text-stone-900">0</h2>
+                        <span id="stat-declined" class="text-[11px] sm:text-xs text-rose-500 font-medium">• 0 no</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gold-50 text-gold-600 flex items-center justify-center text-base sm:text-xl shrink-0">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-medium text-stone-500 uppercase tracking-wider truncate" data-i18n="kpiDietary">Dietas Esp.</p>
+                    <div class="flex items-baseline gap-1.5">
+                        <h2 id="stat-dietary" class="text-xl sm:text-3xl font-bold text-stone-900">0</h2>
+                        <span class="text-[11px] sm:text-xs text-stone-500" data-i18n="kpiReg">reg.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-3.5 sm:p-5 shadow-sm border border-stone-200/80 flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base sm:text-xl shrink-0">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-medium text-stone-500 uppercase tracking-wider truncate" data-i18n="kpiBudget">Presupuesto</p>
+                    <h2 id="stat-budget-total" class="text-base sm:text-2xl font-bold text-stone-900 truncate">$0</h2>
+                    <p id="stat-budget-paid" class="text-[11px] sm:text-xs text-emerald-600 font-medium truncate">Pagado: $0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Barra de Navegación por Pestañas (Optimizada para pulgar en móvil) -->
+        <nav class="sticky top-2 z-30 bg-white/95 backdrop-blur-md rounded-2xl p-1.5 shadow-md border border-stone-200/80 mb-5 sm:mb-6 flex overflow-x-auto no-scrollbar gap-1">
+            <button onclick="switchTab('rsvp')" id="tab-rsvp" class="tab-btn active flex-1 min-w-[130px] min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 bg-gold-500 text-white shadow-sm whitespace-nowrap">
+                <i class="fa-solid fa-envelope-open-text"></i>
+                <span data-i18n="tabRsvp">Asistencia</span>
+            </button>
+            <button onclick="switchTab('guests')" id="tab-guests" class="admin-tab tab-btn flex-1 min-w-[125px] min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-medium text-stone-600 hover:bg-stone-100 transition flex items-center justify-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-address-book"></i>
+                <span data-i18n="tabGuests">Invitados</span>
+            </button>
+            <button onclick="switchTab('budget')" id="tab-budget" class="admin-tab tab-btn flex-1 min-w-[125px] min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-medium text-stone-600 hover:bg-stone-100 transition flex items-center justify-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-calculator"></i>
+                <span data-i18n="tabBudget">Presupuesto</span>
+            </button>
+            <button onclick="switchTab('logistics')" id="tab-logistics" class="admin-tab tab-btn flex-1 min-w-[120px] min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-medium text-stone-600 hover:bg-stone-100 transition flex items-center justify-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-list-check"></i>
+                <span data-i18n="tabLogistics">Logística</span>
+            </button>
+            <button onclick="switchTab('memories')" id="tab-memories" class="tab-btn flex-1 min-w-[135px] min-h-[44px] py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-medium text-stone-600 hover:bg-stone-100 transition flex items-center justify-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-images"></i>
+                <span data-i18n="tabMemories">Muro y Notas</span>
+            </button>
+        </nav>
+
+        <!-- ========================================================= -->
+        <!-- PESTAÑA 1: CONFIRMACIÓN RÁPIDA DE INVITADO (RSVP)         -->
+        <!-- ========================================================= -->
+        <div id="view-rsvp" class="tab-view fade-in grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+            <!-- Formulario Principal de Confirmación -->
+            <div class="lg:col-span-2 bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-stone-200/80">
+                <div class="border-b border-stone-100 pb-4 mb-5 sm:mb-6">
+                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900" data-i18n="rsvpTitle">Tu Confirmación de Asistencia</h2>
+                    <p class="text-xs sm:text-sm text-stone-500 mt-1" data-i18n="rsvpSubtitle">Búscate en la lista o registra tus datos para confirmar si nos acompañas en este día tan especial.</p>
+                </div>
+
+                <!-- Buscador rápido para autocompletar si ya está en la lista -->
+                <div class="mb-5 sm:mb-6 bg-gold-50/70 p-3.5 sm:p-4 rounded-xl border border-gold-200/60">
+                    <label class="block text-xs font-semibold text-gold-900 uppercase tracking-wider mb-2">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i> <span data-i18n="rsvpQuickLabel">¿Ya estás en la lista? Selecciónate aquí:</span>
+                    </label>
+                    <select id="rsvp-quick-select" onchange="loadGuestIntoRSVP(this.value)" class="w-full min-h-[44px] rounded-xl border-gold-300 bg-white px-3.5 py-2.5 text-sm text-stone-800 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none border">
+                        <option value="" data-i18n="rsvpQuickDefault">-- Selecciona tu nombre o escribe uno nuevo --</option>
+                    </select>
+                </div>
+
+                <form id="rsvp-form" onsubmit="handleRSVPSubmit(event)" class="space-y-4 sm:space-y-5">
+                    <input type="hidden" id="rsvp-guest-id">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1.5" data-i18n="rsvpNameLabel">Nombre Completo o Familia *</label>
+                            <input type="text" id="rsvp-name" required data-i18n-ph="rsvpNamePh" placeholder="Ej. Familia Pérez Gómez"
+                                   class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1.5" data-i18n="rsvpPhoneLabel">WhatsApp / Teléfono *</label>
+                            <input type="tel" id="rsvp-phone" required data-i18n-ph="rsvpPhonePh" placeholder="Ej. 300 123 4567"
+                                   class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1.5" data-i18n="rsvpEmailLabel">Correo Electrónico (opcional)</label>
+                        <input type="email" id="rsvp-email" placeholder="correo@ejemplo.com"
+                               class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 focus:border-gold-500 outline-none">
+                    </div>
+
+                    <!-- Estado de Asistencia (Botones táctiles amplios) -->
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-2" data-i18n="rsvpStatusQuestion">¿Podrás acompañarnos? *</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="rsvp-status" value="Confirmado" class="peer sr-only" checked onchange="toggleCompanionFields()">
+                                <div class="min-h-[52px] p-3 sm:p-3.5 rounded-xl border-2 border-stone-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/60 flex sm:flex-col items-center justify-center gap-2 sm:gap-1 text-center transition active:scale-98">
+                                    <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                    <span class="text-sm font-semibold text-stone-800" data-i18n="rsvpYes">¡Sí, asistiré!</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="rsvp-status" value="Por confirmar" class="peer sr-only" onchange="toggleCompanionFields()">
+                                <div class="min-h-[52px] p-3 sm:p-3.5 rounded-xl border-2 border-stone-200 peer-checked:border-amber-500 peer-checked:bg-amber-50/60 flex sm:flex-col items-center justify-center gap-2 sm:gap-1 text-center transition active:scale-98">
+                                    <i class="fa-solid fa-circle-question text-amber-500 text-lg"></i>
+                                    <span class="text-sm font-semibold text-stone-800" data-i18n="rsvpMaybe">En duda / Por confirmar</span>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="rsvp-status" value="No asiste" class="peer sr-only" onchange="toggleCompanionFields()">
+                                <div class="min-h-[52px] p-3 sm:p-3.5 rounded-xl border-2 border-stone-200 peer-checked:border-rose-500 peer-checked:bg-rose-50/60 flex sm:flex-col items-center justify-center gap-2 sm:gap-1 text-center transition active:scale-98">
+                                    <i class="fa-solid fa-circle-xmark text-rose-500 text-lg"></i>
+                                    <span class="text-sm font-semibold text-stone-800" data-i18n="rsvpNo">Me es imposible asistir</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Sección condicional si asiste o está en duda -->
+                    <div id="companion-section" class="space-y-4 pt-3 border-t border-stone-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-stone-700 mb-1.5" data-i18n="rsvpAloneOrNot">¿Vas solo o acompañado?</label>
+                                <select id="rsvp-attendance-type" onchange="updateCompanionsCount()" class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 outline-none bg-white">
+                                    <option value="Solo" data-i18n="rsvpSoloOpt">Asistiré solo(a) (1 persona)</option>
+                                    <option value="Acompañado" data-i18n="rsvpAccompaniedOpt">Iré acompañado(a)</option>
+                                </select>
+                            </div>
+                            <div id="companions-count-wrapper" class="hidden">
+                                <label class="block text-sm font-medium text-stone-700 mb-1.5" data-i18n="rsvpCompanionsLabel">Número de acompañantes</label>
+                                <input type="number" id="rsvp-companions" min="1" max="15" value="1" inputmode="numeric"
+                                       class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 outline-none">
+                                <p class="text-xs text-stone-500 mt-1" data-i18n="rsvpCompanionsHint">Sin contarte a ti (Ej. Si vas con tu pareja, pon 1).</p>
+                            </div>
+                        </div>
+
+                        <!-- Restricciones alimenticias -->
+                        <div class="bg-stone-50 p-3.5 sm:p-4 rounded-xl border border-stone-200/80">
+                            <label class="block text-sm font-semibold text-stone-800 mb-1">
+                                <i class="fa-solid fa-plate-wheat text-gold-600 mr-1"></i> <span data-i18n="rsvpDietaryLabel">Restricciones Alimenticias o Alergias</span>
+                            </label>
+                            <p class="text-xs text-stone-500 mb-2" data-i18n="rsvpDietaryHint">Indícanos si tú o tus acompañantes tienen alergias, son vegetarianos, veganos, celíacos, etc.</p>
+                            <textarea id="rsvp-dietary" rows="2" data-i18n-ph="rsvpDietaryPh" placeholder="Ej. Ninguna / 1 menú vegetariano / Alergia a los mariscos..."
+                                      class="w-full rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 outline-none bg-white"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <button type="button" onclick="resetRSVPForm()" class="min-h-[44px] px-4 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-100 border border-stone-200 sm:border-transparent transition text-center">
+                            <span data-i18n="rsvpClear">Limpiar formulario</span>
+                        </button>
+                        <button type="submit" class="min-h-[48px] px-6 py-3 rounded-xl text-sm sm:text-base font-semibold bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 active:scale-98 text-white shadow-md hover:shadow-lg transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span data-i18n="rsvpSave">Guardar Cambios / Enviar</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Panel Lateral: Notas Colaborativas Rápidas -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80 flex flex-col h-full">
+                <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
+                    <div>
+                        <h3 class="font-serif text-lg font-bold text-stone-900" data-i18n="notesTitle">Notas Colaborativas</h3>
+                        <p class="text-xs text-stone-500" data-i18n="notesSubtitle">Ideas, preguntas o mensajes para todos</p>
+                    </div>
+                    <i class="fa-regular fa-comments text-gold-500 text-xl"></i>
+                </div>
+
+                <!-- Lista de notas en tiempo real -->
+                <div id="quick-notes-list" class="flex-1 space-y-3 overflow-y-auto max-h-[340px] pr-1 mb-4">
+                    <p class="text-center text-xs text-stone-400 py-8" data-i18n="notesLoading">Cargando notas...</p>
+                </div>
+
+                <!-- Añadir nota -->
+                <form onsubmit="handleAddNote(event, 'quick')" class="space-y-2.5 pt-3 border-t border-stone-100">
+                    <input type="text" id="quick-note-author" required data-i18n-ph="notesNamePh" placeholder="Tu nombre"
+                           class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3.5 py-2 text-sm focus:ring-2 focus:ring-gold-500 outline-none">
+                    <div class="flex gap-2">
+                        <input type="text" id="quick-note-text" required data-i18n-ph="notesTextPh" placeholder="Escribe una idea, duda o saludo..."
+                               class="flex-1 min-h-[42px] rounded-xl border border-stone-300 px-3.5 py-2 text-sm focus:ring-2 focus:ring-gold-500 outline-none">
+                        <button type="submit" aria-label="Enviar nota" class="min-w-[44px] min-h-[42px] px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 active:scale-95 text-white text-sm font-semibold transition flex items-center justify-center">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PESTAÑA 2: DIRECTORIO Y GESTIÓN DE INVITADOS               -->
+        <!-- ========================================================= -->
+        <div id="view-guests" class="tab-view hidden fade-in space-y-5 sm:space-y-6">
+            <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 pb-5 mb-5">
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900" data-i18n="guestsTitle">Directorio de Invitados</h2>
+                        <p class="text-xs sm:text-sm text-stone-500" data-i18n="guestsSubtitle">Gestiona el listado, filtra por estado y contacta directamente por WhatsApp o correo.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:flex items-center gap-2.5">
+                        <!-- Botón Exportar Excel/CSV -->
+                        <button onclick="exportGuestsCSV()" class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-stone-800 hover:bg-stone-900 text-white shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-excel text-emerald-400 text-base"></i>
+                            <span data-i18n="guestsExportCsv">Descargar Excel (CSV)</span>
+                        </button>
+                        <!-- Botón Difusión / Copiar Correos -->
+                        <button onclick="openBroadcastModal()" class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span data-i18n="guestsBroadcast">Enviar Novedades / Invitación</span>
+                        </button>
+                        <!-- Botón Añadir Invitado Manualmente -->
+                        <button onclick="openGuestModal()" class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-gold-500 hover:bg-gold-600 text-white shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span data-i18n="guestsAdd">Añadir Invitado</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros y Búsqueda -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-5">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-stone-400 text-sm"></i>
+                        <input type="text" id="guest-search" oninput="renderGuestsTable()" data-i18n-ph="guestsSearchPh" placeholder="Buscar por nombre, teléfono o dieta..."
+                               class="w-full min-h-[44px] pl-10 pr-4 py-2 rounded-xl border border-stone-300 text-sm focus:ring-2 focus:ring-gold-500 outline-none">
+                    </div>
+                    <select id="guest-status-filter" onchange="renderGuestsTable()" class="min-h-[44px] rounded-xl border border-stone-300 px-4 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                        <option value="ALL" data-i18n="filterAll">Todos los estados</option>
+                        <option value="Confirmado" data-i18n="filterConfirmed">Confirmados</option>
+                        <option value="Por confirmar" data-i18n="filterPending">Por confirmar</option>
+                        <option value="No asiste" data-i18n="filterDeclined">No asisten</option>
+                    </select>
+                </div>
+
+                <!-- Vista Tarjetas Móvil (< md) -->
+                <div id="guests-mobile-cards" class="md:hidden space-y-3">
+                    <!-- Renderizado dinámico móvil -->
+                </div>
+
+                <!-- Tabla Escritorio (>= md) -->
+                <div class="hidden md:block overflow-x-auto rounded-xl border border-stone-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-stone-50 border-b border-stone-200 text-xs font-semibold text-stone-600 uppercase tracking-wider">
+                                <th class="py-3.5 px-4" data-i18n="thGuest">Invitado / Familia</th>
+                                <th class="py-3.5 px-4" data-i18n="thContact">Contacto</th>
+                                <th class="py-3.5 px-4" data-i18n="thStatus">Estado</th>
+                                <th class="py-3.5 px-4 text-center" data-i18n="thSeats">Cupos Totales</th>
+                                <th class="py-3.5 px-4" data-i18n="thDietary">Restricciones Alimenticias</th>
+                                <th class="py-3.5 px-4 text-right" data-i18n="thActions">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guests-table-body" class="divide-y divide-stone-100 text-sm">
+                            <!-- Renderizado dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PESTAÑA 3: PRESUPUESTO (FIJOS Y VARIABLES)                -->
+        <!-- ========================================================= -->
+        <div id="view-budget" class="tab-view hidden fade-in space-y-5 sm:space-y-6">
+            <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-100 pb-5 mb-5 sm:mb-6">
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900" data-i18n="budgetTitle">Presupuesto del Evento</h2>
+                        <p class="text-xs sm:text-sm text-stone-500"><span data-i18n="budgetSubtitlePrefix">Los gastos variables se multiplican automáticamente por los</span> <strong id="budget-attendees-count" class="text-gold-700">0 asistentes confirmados</strong>.</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3 text-center sm:text-right">
+                        <div class="bg-stone-50 p-2.5 sm:px-4 sm:py-2 rounded-xl border border-stone-200">
+                            <span class="block text-[10px] sm:text-[11px] uppercase text-stone-500 font-semibold" data-i18n="budgetProjected">Proyectado</span>
+                            <span id="budget-summary-total" class="text-sm sm:text-lg font-bold text-stone-900">$0</span>
+                        </div>
+                        <div class="bg-emerald-50 p-2.5 sm:px-4 sm:py-2 rounded-xl border border-emerald-200">
+                            <span class="block text-[10px] sm:text-[11px] uppercase text-emerald-700 font-semibold" data-i18n="budgetPaid">Pagado</span>
+                            <span id="budget-summary-paid" class="text-sm sm:text-lg font-bold text-emerald-700">$0</span>
+                        </div>
+                        <div class="bg-amber-50 p-2.5 sm:px-4 sm:py-2 rounded-xl border border-amber-200">
+                            <span class="block text-[10px] sm:text-[11px] uppercase text-amber-700 font-semibold" data-i18n="budgetPendingLabel">Pendiente</span>
+                            <span id="budget-summary-pending" class="text-sm sm:text-lg font-bold text-amber-700">$0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario Añadir Gasto -->
+                <form onsubmit="handleAddBudgetItem(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-stone-50 p-4 rounded-xl border border-stone-200 mb-6">
+                    <div class="sm:col-span-4">
+                        <label class="block text-xs font-semibold text-stone-600 mb-1" data-i18n="budgetConceptLabel">Concepto / Proveedor</label>
+                        <input type="text" id="budget-concept" required data-i18n-ph="budgetConceptPh" placeholder="Ej. Alquiler Salón / Buffet"
+                               class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-xs font-semibold text-stone-600 mb-1" data-i18n="budgetTypeLabel">Tipo de Gasto</label>
+                        <select id="budget-type" class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                            <option value="fixed" data-i18n="budgetFixedOpt">Gasto Fijo (Monto único)</option>
+                            <option value="variable" data-i18n="budgetVariableOpt">Variable (Por invitado)</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-xs font-semibold text-stone-600 mb-1" data-i18n="budgetAmountLabel">Valor Unitario / Fijo ($)</label>
+                        <input type="number" id="budget-amount" required min="0" step="100" inputmode="numeric" data-i18n-ph="budgetAmountPh" placeholder="Ej. 500000"
+                               class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                    </div>
+                    <div class="sm:col-span-2 flex items-end">
+                        <button type="submit" class="w-full min-h-[44px] py-2 px-4 rounded-xl bg-gold-500 hover:bg-gold-600 text-white font-semibold text-sm transition shadow-sm">
+                            <i class="fa-solid fa-plus mr-1"></i> <span data-i18n="budgetAdd">Agregar</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Vista Tarjetas Móvil Presupuesto (< md) -->
+                <div id="budget-mobile-cards" class="md:hidden space-y-3">
+                    <!-- Renderizado dinámico móvil -->
+                </div>
+
+                <!-- Tabla de Presupuesto (>= md) -->
+                <div class="hidden md:block overflow-x-auto rounded-xl border border-stone-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-stone-50 border-b border-stone-200 text-xs font-semibold text-stone-600 uppercase">
+                                <th class="py-3 px-4 w-12 text-center" data-i18n="budgetThPaid">Pagado</th>
+                                <th class="py-3 px-4" data-i18n="budgetThConcept">Concepto</th>
+                                <th class="py-3 px-4" data-i18n="budgetThType">Tipo</th>
+                                <th class="py-3 px-4 text-right" data-i18n="budgetThBase">Costo Base</th>
+                                <th class="py-3 px-4 text-right" data-i18n="budgetThSubtotal">Subtotal Calculado</th>
+                                <th class="py-3 px-4 text-right" data-i18n="budgetThDelete">Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="budget-table-body" class="divide-y divide-stone-100 text-sm">
+                            <!-- Renderizado dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PESTAÑA 4: LOGÍSTICA Y TAREAS COMPARTIDAS                 -->
+        <!-- ========================================================= -->
+        <div id="view-logistics" class="tab-view hidden fade-in">
+            <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80 max-w-4xl mx-auto">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-4 mb-5 sm:mb-6">
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900" data-i18n="logisticsTitle">Checklist de Logística</h2>
+                        <p class="text-xs sm:text-sm text-stone-500" data-i18n="logisticsSubtitle">Marca las tareas completadas; se actualizarán al instante para todos los organizadores.</p>
+                    </div>
+                    <div>
+                        <span id="tasks-progress-text" class="inline-block text-xs font-bold text-gold-700 bg-gold-50 px-3 py-1.5 rounded-full border border-gold-200">0% completado</span>
+                    </div>
+                </div>
+
+                <!-- Añadir Nueva Tarea -->
+                <form onsubmit="handleAddTask(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-6">
+                    <div class="sm:col-span-6">
+                        <input type="text" id="task-title" required data-i18n-ph="taskTitlePh" placeholder="Nueva tarea (ej. Confirmar menú)..."
+                               class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 outline-none">
+                    </div>
+                    <div class="sm:col-span-4">
+                        <input type="text" id="task-assignee" data-i18n-ph="taskAssigneePh" placeholder="Responsable (opcional)"
+                               class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-gold-500 outline-none">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-gold-500 hover:bg-gold-600 text-white font-semibold text-sm transition">
+                            <span data-i18n="taskAdd">Añadir</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Lista de Tareas -->
+                <div id="tasks-list" class="space-y-2.5">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PESTAÑA 5: MURO DE RECUERDOS Y NOTAS COLABORATIVAS        -->
+        <!-- ========================================================= -->
+        <div id="view-memories" class="tab-view hidden fade-in grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+            <!-- Muro de Fotos y Recuerdos (2 columnas) -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80">
+                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900 mb-1" data-i18n="memoriesTitle">Muro de Recuerdos de Chucho & Gloria</h2>
+                    <p class="text-xs sm:text-sm text-stone-500 mb-5" data-i18n="memoriesSubtitle">Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.</p>
+
+                    <form onsubmit="handleAddMemory(event)" class="bg-gold-50/50 p-3.5 sm:p-4 rounded-xl border border-gold-200/70 space-y-3 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" id="memory-author" required data-i18n-ph="memoryAuthorPh" placeholder="Tu nombre *"
+                                   class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3.5 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                            <input type="url" id="memory-url" required data-i18n-ph="memoryUrlPh" placeholder="Enlace de la foto (URL, Drive) *"
+                                   class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3.5 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <input type="text" id="memory-caption" required data-i18n-ph="memoryCaptionPh" placeholder="Escribe una anécdota o felicitación..."
+                                   class="flex-1 min-h-[42px] rounded-xl border border-stone-300 px-3.5 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                            <button type="submit" class="min-h-[44px] px-5 py-2 rounded-xl bg-gold-500 hover:bg-gold-600 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shrink-0">
+                                <i class="fa-solid fa-upload"></i> <span data-i18n="memoryPublish">Publicar Recuerdo</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Galería de Recuerdos -->
+                    <div id="memories-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Renderizado dinámico -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tablero Completo de Notas Colaborativas (1 columna) -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80 flex flex-col">
+                <h3 class="font-serif text-xl font-bold text-stone-900 mb-1" data-i18n="notesBoardTitle">Tablero de Notas</h3>
+                <p class="text-xs text-stone-500 mb-4" data-i18n="notesBoardSubtitle">Ideas sueltas, coordinación de transporte, regalos o preguntas.</p>
+
+                <form onsubmit="handleAddNote(event, 'full')" class="space-y-2.5 mb-5 bg-stone-50 p-3.5 rounded-xl border border-stone-200">
+                    <input type="text" id="full-note-author" required data-i18n-ph="notesNamePh" placeholder="Tu nombre"
+                           class="w-full min-h-[42px] rounded-xl border border-stone-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none">
+                    <textarea id="full-note-text" required rows="2" data-i18n-ph="notesBoardTextPh" placeholder="Escribe tu nota aquí..."
+                              class="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-gold-500 outline-none"></textarea>
+                    <button type="submit" class="w-full min-h-[42px] py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs sm:text-sm font-semibold transition">
+                        <span data-i18n="notesBoardPublish">Publicar Nota</span>
+                    </button>
+                </form>
+
+                <div id="full-notes-list" class="space-y-3 overflow-y-auto max-h-[450px] pr-1">
+                    <!-- Renderizado dinámico -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- MODALES                                                   -->
+    <!-- ========================================================= -->
+
+    <!-- Modal: Añadir / Editar Invitado -->
+    <div id="guest-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl fade-in">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
+                <h3 id="guest-modal-title" class="font-serif text-xl font-bold text-stone-900" data-i18n="modalGuestAddTitle">Añadir Invitado</h3>
+                <button onclick="closeModal('guest-modal')" class="text-stone-400 hover:text-stone-700 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveGuestModal(event)" class="space-y-4">
+                <input type="hidden" id="modal-guest-id">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="modalGuestNameLabel">Nombre Completo / Familia *</label>
+                    <input type="text" id="modal-guest-name" required class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="modalGuestPhoneLabel">WhatsApp / Teléfono</label>
+                        <input type="tel" id="modal-guest-phone" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="modalGuestEmailLabel">Correo Electrónico</label>
+                        <input type="email" id="modal-guest-email" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="thStatus">Estado</label>
+                        <select id="modal-guest-status" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm bg-white outline-none focus:ring-2 focus:ring-gold-500">
+                            <option value="Por confirmar" data-i18n="statusPorConfirmar">Por confirmar</option>
+                            <option value="Confirmado" data-i18n="statusConfirmado">Confirmado</option>
+                            <option value="No asiste" data-i18n="statusNoAsiste">No asiste</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="modalGuestCompanionsLabel">Acompañantes Adicionales</label>
+                        <input type="number" id="modal-guest-companions" min="0" max="20" value="0" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="modalGuestDietaryLabel">Restricciones Alimenticias</label>
+                    <input type="text" id="modal-guest-dietary" data-i18n-ph="modalGuestDietaryPh" placeholder="Ej. Vegetariano, sin gluten..." class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-stone-100">
+                    <button type="button" onclick="closeModal('guest-modal')" class="px-4 py-2 rounded-xl text-sm text-stone-600 hover:bg-stone-100" data-i18n="cancel">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-gold-500 hover:bg-gold-600 text-white" data-i18n="save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Configuración del Evento (Foto, Título, Fecha, Lugar) -->
+    <div id="settings-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl fade-in">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
+                <h3 class="font-serif text-xl font-bold text-stone-900" data-i18n="settingsTitle">Personalizar Evento</h3>
+                <button onclick="closeModal('settings-modal')" class="text-stone-400 hover:text-stone-700 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="handleSaveSettings(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="settingsEventTitleLabel">Título del Evento</label>
+                    <input type="text" id="set-title" required class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="settingsDateLabel">Fecha y Hora</label>
+                    <input type="text" id="set-date" required class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="settingsLocationLabel">Lugar (Dirección)</label>
+                    <input type="text" id="set-location" required class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="settingsPhotoLabel">URL de Fotografía de los Homenajeados (Encabezado)</label>
+                    <input type="url" id="set-photo" placeholder="https://..." class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                    <p class="text-[11px] text-stone-500 mt-1" data-i18n="settingsPhotoHint">Pega un enlace directo a una foto de Chucho & Gloria.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="settingsPinLabel">PIN de Acceso para Administradores</label>
+                    <input type="text" id="set-admin-pin" required maxlength="12" data-i18n-ph="settingsPinPh" placeholder="Ej. 1977" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                    <p class="text-[11px] text-stone-500 mt-1" data-i18n="settingsPinHint">Clave requerida para desbloquear los módulos de administración.</p>
+                </div>
+                <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-200/80">
+                    <label class="block text-xs font-bold text-blue-900 mb-1">
+                        <i class="fa-solid fa-cloud mr-1"></i> <span data-i18n="settingsCloudLabel">Conexión Nube Externa / Google Sheets (Opcional para Google Sites)</span>
+                    </label>
+                    <input type="url" id="set-webhook" placeholder="https://script.google.com/macros/s/.../exec" class="w-full rounded-xl border border-blue-300 px-3 py-2 text-xs bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-[11px] text-blue-800 mt-1" data-i18n="settingsCloudHint">Si alojas esta web en Google Sites, pega aquí la URL de tu Web App de Google Apps Script para sincronizar respuestas en tiempo real en Google Sheets.</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t border-stone-100">
+                    <button type="button" onclick="closeModal('settings-modal')" class="px-4 py-2 rounded-xl text-sm text-stone-600 hover:bg-stone-100" data-i18n="cancel">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-gold-500 hover:bg-gold-600 text-white" data-i18n="settingsUpdateBtn">Actualizar Encabezado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Acceso PIN de Administrador -->
+    <div id="admin-pin-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl fade-in">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
+                <h3 class="font-serif text-lg font-bold text-stone-900" data-i18n="pinModalTitle">Acceso para Organizadores</h3>
+                <button onclick="closeModal('admin-pin-modal')" class="text-stone-400 hover:text-stone-700 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form onsubmit="verifyAdminPin(event)" class="space-y-4">
+                <p class="text-xs text-stone-500" data-i18n="pinModalHint">Ingresa el PIN de administrador para gestionar invitados, presupuesto y logística.</p>
+                <div>
+                    <input type="password" id="admin-pin-input" required data-i18n-ph="pinModalPh" placeholder="Ingresa el PIN (ej. 1977)" inputmode="numeric"
+                           class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-center text-base font-bold tracking-widest outline-none focus:ring-2 focus:ring-gold-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('admin-pin-modal')" class="px-4 py-2 rounded-xl text-sm text-stone-600 hover:bg-stone-100" data-i18n="cancel">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-gold-500 hover:bg-gold-600 text-white" data-i18n="pinModalUnlock">Desbloquear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Comunicación y Novedades Masivas -->
+    <div id="broadcast-modal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl fade-in">
+            <div class="flex items-center justify-between border-b border-stone-100 pb-3 mb-4">
+                <h3 class="font-serif text-xl font-bold text-stone-900" data-i18n="broadcastTitle">Centro de Contacto con Invitados</h3>
+                <button onclick="closeModal('broadcast-modal')" class="text-stone-400 hover:text-stone-700 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="broadcastMessageLabel">Mensaje de Invitación o Novedad (Listo para copiar)</label>
+                    <textarea id="broadcast-message" rows="4" class="w-full rounded-xl border border-stone-300 p-3 text-sm bg-stone-50 outline-none focus:ring-2 focus:ring-gold-500"></textarea>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="copyBroadcastText()" class="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold flex items-center gap-2">
+                        <i class="fa-regular fa-copy"></i> <span data-i18n="broadcastCopyMsg">Copiar Mensaje + Enlace</span>
+                    </button>
+                    <button onclick="copyAllEmails()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-2">
+                        <i class="fa-regular fa-envelope"></i> <span data-i18n="broadcastCopyEmails">Copiar Todos los Correos</span>
+                    </button>
+                </div>
+                <div class="border-t border-stone-100 pt-3">
+                    <p class="text-xs font-semibold text-stone-700 mb-2" data-i18n="broadcastWaLabel">Envío directo por WhatsApp (1 clic por invitado):</p>
+                    <div id="whatsapp-quick-list" class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                        <!-- Lista de botones de WhatsApp -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- LÓGICA DE APLICACIÓN Y SINCRONIZACIÓN EN TIEMPO REAL      -->
+    <!-- ========================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuración e inicialización
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'eventify-chucho-gloria';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let isCloudMode = false;
+        // Estado global de la aplicación (Inicia en Vista Invitado por defecto)
+        window.appState = {
+            isAdmin: false,
+            settings: {
+                title: "Bodas de Oro de Chucho & Gloria",
+                date: "Domingo 10 de enero de 2027, a partir de las 12:00 m.",
+                location: "Club Los Buhos, Cl. 200 #55-79, Bogotá, Cundinamarca",
+                photoUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1920&q=80",
+                adminPin: "1977",
+                webhookUrl: ""
+            },
+            guests: [],
+            budget: [],
+            tasks: [],
+            memories: [],
+            notes: []
+        };
+
+        // =========================================================
+        // INTERNACIONALIZACIÓN (ES / EN)
+        // =========================================================
+        const LANG_STORAGE_KEY = 'eventify_lang_chucho_gloria';
+        const I18N = {
+            es: {
+                live: "En vivo", adminAccess: "Acceso Organizador", adminExit: "Salir de Organizador",
+                adminMobile: "Organizador", adminExitMobile: "Salir Admin", share: "Compartir",
+                heroTagline: "50 Años de Amor y Familia", changePhoto: "Cambiar Foto / Datos",
+                kpiConfirmed: "Confirmados", kpiPending: "Por Confirmar", kpiDietary: "Dietas Esp.",
+                kpiReg: "reg.", kpiBudget: "Presupuesto", abbrevGuests: "inv.", declinedSuffix: "no asisten",
+                tabRsvp: "Asistencia", tabGuests: "Invitados", tabBudget: "Presupuesto", tabLogistics: "Logística", tabMemories: "Muro y Notas",
+                rsvpTitle: "Tu Confirmación de Asistencia",
+                rsvpSubtitle: "Búscate en la lista o registra tus datos para confirmar si nos acompañas en este día tan especial.",
+                rsvpQuickLabel: "¿Ya estás en la lista? Selecciónate aquí:",
+                rsvpQuickDefault: "-- Selecciona tu nombre o escribe uno nuevo --",
+                rsvpNameLabel: "Nombre Completo o Familia *", rsvpNamePh: "Ej. Familia Pérez Gómez",
+                rsvpPhoneLabel: "WhatsApp / Teléfono *", rsvpPhonePh: "Ej. 300 123 4567",
+                rsvpEmailLabel: "Correo Electrónico (opcional)",
+                rsvpStatusQuestion: "¿Podrás acompañarnos? *",
+                rsvpYes: "¡Sí, asistiré!", rsvpMaybe: "En duda / Por confirmar", rsvpNo: "Me es imposible asistir",
+                rsvpAloneOrNot: "¿Vas solo o acompañado?",
+                rsvpSoloOpt: "Asistiré solo(a) (1 persona)", rsvpAccompaniedOpt: "Iré acompañado(a)",
+                rsvpCompanionsLabel: "Número de acompañantes",
+                rsvpCompanionsHint: "Sin contarte a ti (Ej. Si vas con tu pareja, pon 1).",
+                rsvpDietaryLabel: "Restricciones Alimenticias o Alergias",
+                rsvpDietaryHint: "Indícanos si tú o tus acompañantes tienen alergias, son vegetarianos, veganos, celíacos, etc.",
+                rsvpDietaryPh: "Ej. Ninguna / 1 menú vegetariano / Alergia a los mariscos...",
+                rsvpClear: "Limpiar formulario", rsvpSave: "Guardar Cambios / Enviar",
+                notesTitle: "Notas Colaborativas", notesSubtitle: "Ideas, preguntas o mensajes para todos",
+                notesLoading: "Cargando notas...", notesNamePh: "Tu nombre", notesTextPh: "Escribe una idea, duda o saludo...",
+                guestsTitle: "Directorio de Invitados",
+                guestsSubtitle: "Gestiona el listado, filtra por estado y contacta directamente por WhatsApp o correo.",
+                guestsExportCsv: "Descargar Excel (CSV)", guestsBroadcast: "Enviar Novedades / Invitación", guestsAdd: "Añadir Invitado",
+                guestsSearchPh: "Buscar por nombre, teléfono o dieta...",
+                filterAll: "Todos los estados", filterConfirmed: "Confirmados", filterPending: "Por confirmar", filterDeclined: "No asisten",
+                thGuest: "Invitado / Familia", thContact: "Contacto", thStatus: "Estado", thSeats: "Cupos Totales",
+                thDietary: "Restricciones Alimenticias", thActions: "Acciones",
+                noGuestsFound: "No se encontraron invitados con ese filtro.",
+                statusConfirmado: "Confirmado", statusPorConfirmar: "Por confirmar", statusNoAsiste: "No asiste",
+                pers: "pers.", editTooltip: "Editar", deleteTooltip: "Eliminar", sendWaTooltip: "Enviar WhatsApp",
+                budgetTitle: "Presupuesto del Evento",
+                budgetSubtitlePrefix: "Los gastos variables se multiplican automáticamente por los",
+                budgetAttendeesSuffix: "asistentes confirmados",
+                budgetProjected: "Proyectado", budgetPaid: "Pagado", budgetPendingLabel: "Pendiente",
+                budgetConceptLabel: "Concepto / Proveedor", budgetConceptPh: "Ej. Alquiler Salón / Buffet",
+                budgetTypeLabel: "Tipo de Gasto", budgetFixedOpt: "Gasto Fijo (Monto único)", budgetVariableOpt: "Variable (Por invitado)",
+                budgetAmountLabel: "Valor Unitario / Fijo ($)", budgetAmountPh: "Ej. 500000", budgetAdd: "Agregar",
+                budgetThPaid: "Pagado", budgetThConcept: "Concepto", budgetThType: "Tipo", budgetThBase: "Costo Base",
+                budgetThSubtotal: "Subtotal Calculado", budgetThDelete: "Eliminar",
+                budgetNoExpenses: "Aún no hay gastos registrados.", budgetFixedBadge: "Fijo", budgetVariableBadge: "Variable",
+                budgetPaidStat: "Pagado",
+                logisticsTitle: "Checklist de Logística",
+                logisticsSubtitle: "Marca las tareas completadas; se actualizarán al instante para todos los organizadores.",
+                taskTitlePh: "Nueva tarea (ej. Confirmar menú)...", taskAssigneePh: "Responsable (opcional)", taskAdd: "Añadir",
+                tasksProgress: "completado", noTasks: "No hay tareas pendientes.",
+                memoriesTitle: "Muro de Recuerdos de Chucho & Gloria",
+                memoriesSubtitle: "Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.",
+                memoryAuthorPh: "Tu nombre *", memoryUrlPh: "Enlace de la foto (URL, Drive) *",
+                memoryCaptionPh: "Escribe una anécdota o felicitación...", memoryPublish: "Publicar Recuerdo",
+                memoryOpenOriginal: "Abrir original", memoryDelete: "Eliminar",
+                noMemories: "Aún no hay recuerdos publicados. ¡Sube el enlace de una foto!",
+                notesBoardTitle: "Tablero de Notas", notesBoardSubtitle: "Ideas sueltas, coordinación de transporte, regalos o preguntas.",
+                notesBoardTextPh: "Escribe tu nota aquí...", notesBoardPublish: "Publicar Nota", noNotes: "Sé el primero en dejar una nota.",
+                cancel: "Cancelar", save: "Guardar",
+                modalGuestAddTitle: "Añadir Invitado", modalGuestEditTitle: "Editar Invitado", modalGuestNewTitle: "Añadir Nuevo Invitado",
+                modalGuestNameLabel: "Nombre Completo / Familia *", modalGuestPhoneLabel: "WhatsApp / Teléfono",
+                modalGuestEmailLabel: "Correo Electrónico", modalGuestCompanionsLabel: "Acompañantes Adicionales",
+                modalGuestDietaryLabel: "Restricciones Alimenticias", modalGuestDietaryPh: "Ej. Vegetariano, sin gluten...",
+                settingsTitle: "Personalizar Evento", settingsEventTitleLabel: "Título del Evento", settingsDateLabel: "Fecha y Hora",
+                settingsLocationLabel: "Lugar (Dirección)", settingsPhotoLabel: "URL de Fotografía de los Homenajeados (Encabezado)",
+                settingsPhotoHint: "Pega un enlace directo a una foto de Chucho & Gloria.",
+                settingsPinLabel: "PIN de Acceso para Administradores", settingsPinPh: "Ej. 1977",
+                settingsPinHint: "Clave requerida para desbloquear los módulos de administración.",
+                settingsCloudLabel: "Conexión Nube Externa / Google Sheets (Opcional para Google Sites)",
+                settingsCloudHint: "Si alojas esta web en Google Sites, pega aquí la URL de tu Web App de Google Apps Script para sincronizar respuestas en tiempo real en Google Sheets.",
+                settingsUpdateBtn: "Actualizar Encabezado",
+                pinModalTitle: "Acceso para Organizadores",
+                pinModalHint: "Ingresa el PIN de administrador para gestionar invitados, presupuesto y logística.",
+                pinModalPh: "Ingresa el PIN (ej. 1977)", pinModalUnlock: "Desbloquear",
+                broadcastTitle: "Centro de Contacto con Invitados",
+                broadcastMessageLabel: "Mensaje de Invitación o Novedad (Listo para copiar)",
+                broadcastCopyMsg: "Copiar Mensaje + Enlace", broadcastCopyEmails: "Copiar Todos los Correos",
+                broadcastWaLabel: "Envío directo por WhatsApp (1 clic por invitado):",
+                broadcastNoPhones: "No hay invitados con número de teléfono registrado.", broadcastSend: "Enviar",
+                toastRsvpUpdated: "¡Confirmación actualizada y sincronizada!",
+                toastRsvpThanks: "¡Gracias! Tu asistencia ha sido registrada.",
+                toastRsvpSaved: "¡Confirmación guardada exitosamente!",
+                toastRsvpError: "No se pudo guardar. Intenta nuevamente.",
+                toastStatusUpdated: "Estado actualizado a \"{status}\"", toastStatusError: "Error al actualizar estado",
+                toastGuestUpdated: "Invitado actualizado", toastGuestAdded: "Invitado añadido a la lista",
+                toastGuestError: "Error guardando invitado",
+                toastBudgetAdded: "Gasto agregado al presupuesto",
+                toastMarkedPaid: "Marcado como pagado", toastMarkedPending: "Marcado como pendiente",
+                toastTaskAdded: "Tarea añadida", toastNoteAdded: "Nota publicada para todos",
+                toastMemoryAdded: "¡Recuerdo publicado en el muro!", toastSettingsUpdated: "Datos del evento actualizados",
+                toastItemDeleted: "Elemento eliminado", toastCsvDownloaded: "Listado descargado en formato Excel (CSV)",
+                toastGuestViewReturned: "Has vuelto a la Vista Invitado", toastAdminUnlocked: "Modo Organizador desbloqueado",
+                toastWrongPin: "PIN incorrecto. Intenta nuevamente.",
+                toastLinkCopied: "¡Enlace copiado! Compártelo con invitados u otros organizadores.",
+                toastBroadcastCopied: "Mensaje e invitación copiados al portapapeles.",
+                toastNoEmails: "No hay correos electrónicos registrados aún.",
+                toastEmailsCopied: "Lista de correos copiada (pégala en CCO de tu correo).",
+                toastCopyFailed: "No se pudo copiar automáticamente.",
+                csvHeaders: "Nombre,Telefono,Correo,Estado,Acompanantes,Total_Personas,Restricciones_Alimenticias",
+                waInviteMsg: "¡Hola {name}! Te invitamos a celebrar las {title} el {date}. Confirma tu asistencia aquí: {link}",
+                broadcastMsg: "¡Hola! Nos encantaría contar contigo en las {title}.\n📅 Fecha: {date}\n📍 Lugar: {location}\n\nPor favor confirma tu asistencia y cuéntanos si tienes alguna restricción alimenticia en este enlace:\n{link}"
+            },
+            en: {
+                live: "Live", adminAccess: "Organizer Access", adminExit: "Exit Organizer",
+                adminMobile: "Organizer", adminExitMobile: "Exit Admin", share: "Share",
+                heroTagline: "50 Years of Love and Family", changePhoto: "Change Photo / Details",
+                kpiConfirmed: "Confirmed", kpiPending: "Pending", kpiDietary: "Special Diets",
+                kpiReg: "reg.", kpiBudget: "Budget", abbrevGuests: "guests", declinedSuffix: "not attending",
+                tabRsvp: "RSVP", tabGuests: "Guests", tabBudget: "Budget", tabLogistics: "Logistics", tabMemories: "Wall & Notes",
+                rsvpTitle: "Your RSVP",
+                rsvpSubtitle: "Find yourself on the list or enter your details to confirm whether you'll join us on this special day.",
+                rsvpQuickLabel: "Already on the list? Select yourself here:",
+                rsvpQuickDefault: "-- Select your name or type a new one --",
+                rsvpNameLabel: "Full Name or Family *", rsvpNamePh: "E.g. Pérez Gómez Family",
+                rsvpPhoneLabel: "WhatsApp / Phone *", rsvpPhonePh: "E.g. 300 123 4567",
+                rsvpEmailLabel: "Email (optional)",
+                rsvpStatusQuestion: "Will you be joining us? *",
+                rsvpYes: "Yes, I'll attend!", rsvpMaybe: "Not sure / Pending", rsvpNo: "I can't make it",
+                rsvpAloneOrNot: "Going alone or with others?",
+                rsvpSoloOpt: "I'll attend alone (1 person)", rsvpAccompaniedOpt: "I'll bring others",
+                rsvpCompanionsLabel: "Number of companions",
+                rsvpCompanionsHint: "Not counting yourself (e.g. if bringing your partner, enter 1).",
+                rsvpDietaryLabel: "Dietary Restrictions or Allergies",
+                rsvpDietaryHint: "Let us know if you or your companions have allergies, are vegetarian, vegan, celiac, etc.",
+                rsvpDietaryPh: "E.g. None / 1 vegetarian meal / Shellfish allergy...",
+                rsvpClear: "Clear form", rsvpSave: "Save Changes / Submit",
+                notesTitle: "Collaborative Notes", notesSubtitle: "Ideas, questions or messages for everyone",
+                notesLoading: "Loading notes...", notesNamePh: "Your name", notesTextPh: "Write an idea, question or greeting...",
+                guestsTitle: "Guest Directory",
+                guestsSubtitle: "Manage the list, filter by status and contact guests directly via WhatsApp or email.",
+                guestsExportCsv: "Download Excel (CSV)", guestsBroadcast: "Send Updates / Invitation", guestsAdd: "Add Guest",
+                guestsSearchPh: "Search by name, phone or diet...",
+                filterAll: "All statuses", filterConfirmed: "Confirmed", filterPending: "Pending", filterDeclined: "Not attending",
+                thGuest: "Guest / Family", thContact: "Contact", thStatus: "Status", thSeats: "Total Seats",
+                thDietary: "Dietary Restrictions", thActions: "Actions",
+                noGuestsFound: "No guests found with that filter.",
+                statusConfirmado: "Confirmed", statusPorConfirmar: "Pending", statusNoAsiste: "Not attending",
+                pers: "people", editTooltip: "Edit", deleteTooltip: "Delete", sendWaTooltip: "Send WhatsApp",
+                budgetTitle: "Event Budget",
+                budgetSubtitlePrefix: "Variable expenses are automatically multiplied by the",
+                budgetAttendeesSuffix: "confirmed attendees",
+                budgetProjected: "Projected", budgetPaid: "Paid", budgetPendingLabel: "Pending",
+                budgetConceptLabel: "Item / Vendor", budgetConceptPh: "E.g. Venue Rental / Buffet",
+                budgetTypeLabel: "Expense Type", budgetFixedOpt: "Fixed Expense (One-time amount)", budgetVariableOpt: "Variable (Per guest)",
+                budgetAmountLabel: "Unit / Fixed Value ($)", budgetAmountPh: "E.g. 500000", budgetAdd: "Add",
+                budgetThPaid: "Paid", budgetThConcept: "Concept", budgetThType: "Type", budgetThBase: "Base Cost",
+                budgetThSubtotal: "Calculated Subtotal", budgetThDelete: "Delete",
+                budgetNoExpenses: "No expenses recorded yet.", budgetFixedBadge: "Fixed", budgetVariableBadge: "Variable",
+                budgetPaidStat: "Paid",
+                logisticsTitle: "Logistics Checklist",
+                logisticsSubtitle: "Check off completed tasks; they'll update instantly for all organizers.",
+                taskTitlePh: "New task (e.g. Confirm menu)...", taskAssigneePh: "Assignee (optional)", taskAdd: "Add",
+                tasksProgress: "complete", noTasks: "No pending tasks.",
+                memoriesTitle: "Chucho & Gloria's Memory Wall",
+                memoriesSubtitle: "Share photo links (Google Drive, Dropbox, Google Photos or a public URL) and leave a special message.",
+                memoryAuthorPh: "Your name *", memoryUrlPh: "Photo link (URL, Drive) *",
+                memoryCaptionPh: "Write an anecdote or congratulations...", memoryPublish: "Publish Memory",
+                memoryOpenOriginal: "Open original", memoryDelete: "Delete",
+                noMemories: "No memories published yet. Upload a photo link!",
+                notesBoardTitle: "Notes Board", notesBoardSubtitle: "Loose ideas, transport coordination, gifts or questions.",
+                notesBoardTextPh: "Write your note here...", notesBoardPublish: "Publish Note", noNotes: "Be the first to leave a note.",
+                cancel: "Cancel", save: "Save",
+                modalGuestAddTitle: "Add Guest", modalGuestEditTitle: "Edit Guest", modalGuestNewTitle: "Add New Guest",
+                modalGuestNameLabel: "Full Name / Family *", modalGuestPhoneLabel: "WhatsApp / Phone",
+                modalGuestEmailLabel: "Email", modalGuestCompanionsLabel: "Additional Companions",
+                modalGuestDietaryLabel: "Dietary Restrictions", modalGuestDietaryPh: "E.g. Vegetarian, gluten-free...",
+                settingsTitle: "Customize Event", settingsEventTitleLabel: "Event Title", settingsDateLabel: "Date and Time",
+                settingsLocationLabel: "Location (Address)", settingsPhotoLabel: "Honorees' Photo URL (Header)",
+                settingsPhotoHint: "Paste a direct link to a photo of Chucho & Gloria.",
+                settingsPinLabel: "Admin Access PIN", settingsPinPh: "E.g. 1977",
+                settingsPinHint: "Password required to unlock the admin modules.",
+                settingsCloudLabel: "External Cloud Connection / Google Sheets (Optional, for Google Sites)",
+                settingsCloudHint: "If you host this site on Google Sites, paste your Google Apps Script Web App URL here to sync responses in real time to Google Sheets.",
+                settingsUpdateBtn: "Update Header",
+                pinModalTitle: "Organizer Access",
+                pinModalHint: "Enter the admin PIN to manage guests, budget and logistics.",
+                pinModalPh: "Enter PIN (e.g. 1977)", pinModalUnlock: "Unlock",
+                broadcastTitle: "Guest Contact Center",
+                broadcastMessageLabel: "Invitation or Update Message (Ready to copy)",
+                broadcastCopyMsg: "Copy Message + Link", broadcastCopyEmails: "Copy All Emails",
+                broadcastWaLabel: "Direct WhatsApp sending (1 click per guest):",
+                broadcastNoPhones: "No guests with a registered phone number.", broadcastSend: "Send",
+                toastRsvpUpdated: "RSVP updated and synced!",
+                toastRsvpThanks: "Thank you! Your attendance has been recorded.",
+                toastRsvpSaved: "RSVP saved successfully!",
+                toastRsvpError: "Could not save. Please try again.",
+                toastStatusUpdated: "Status updated to \"{status}\"", toastStatusError: "Error updating status",
+                toastGuestUpdated: "Guest updated", toastGuestAdded: "Guest added to the list",
+                toastGuestError: "Error saving guest",
+                toastBudgetAdded: "Expense added to the budget",
+                toastMarkedPaid: "Marked as paid", toastMarkedPending: "Marked as pending",
+                toastTaskAdded: "Task added", toastNoteAdded: "Note published for everyone",
+                toastMemoryAdded: "Memory published to the wall!", toastSettingsUpdated: "Event details updated",
+                toastItemDeleted: "Item deleted", toastCsvDownloaded: "List downloaded as Excel (CSV)",
+                toastGuestViewReturned: "You've returned to Guest View", toastAdminUnlocked: "Organizer Mode unlocked",
+                toastWrongPin: "Incorrect PIN. Please try again.",
+                toastLinkCopied: "Link copied! Share it with guests or other organizers.",
+                toastBroadcastCopied: "Message and invitation copied to clipboard.",
+                toastNoEmails: "No emails registered yet.",
+                toastEmailsCopied: "Email list copied (paste it in your BCC field).",
+                toastCopyFailed: "Could not copy automatically.",
+                csvHeaders: "Name,Phone,Email,Status,Companions,Total_People,Dietary_Restrictions",
+                waInviteMsg: "Hi {name}! We invite you to celebrate {title} on {date}. Please confirm your attendance here: {link}",
+                broadcastMsg: "Hi! We would love to have you join us at {title}.\n📅 Date: {date}\n📍 Location: {location}\n\nPlease confirm your attendance and let us know about any dietary restrictions at this link:\n{link}"
+            }
+        };
+
+        let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || 'es';
+
+        function t(key, vars) {
+            let str = (I18N[currentLang] && I18N[currentLang][key] != null) ? I18N[currentLang][key] : (I18N.es[key] || key);
+            if (vars) {
+                Object.keys(vars).forEach(k => { str = str.split(`{${k}}`).join(vars[k]); });
+            }
+            return str;
+        }
+
+        function statusLabel(status) {
+            if (status === 'Confirmado') return t('statusConfirmado');
+            if (status === 'No asiste') return t('statusNoAsiste');
+            return t('statusPorConfirmar');
+        }
+
+        function applyStaticTranslations() {
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+            document.documentElement.lang = currentLang;
+        }
+
+        function updateLangButtonsUI() {
+            const esBtn = document.getElementById('lang-btn-es');
+            const enBtn = document.getElementById('lang-btn-en');
+            if (!esBtn || !enBtn) return;
+            const activeCls = "min-h-[32px] sm:min-h-[36px] px-2 sm:px-3 py-1 rounded-[10px] text-xs sm:text-sm font-semibold transition bg-gold-500 text-white shadow";
+            const inactiveCls = "min-h-[32px] sm:min-h-[36px] px-2 sm:px-3 py-1 rounded-[10px] text-xs sm:text-sm font-semibold transition text-white/70 hover:text-white";
+            esBtn.className = currentLang === 'es' ? activeCls : inactiveCls;
+            enBtn.className = currentLang === 'en' ? activeCls : inactiveCls;
+        }
+
+        window.setLanguage = function(lang) {
+            if (lang !== 'es' && lang !== 'en') return;
+            currentLang = lang;
+            localStorage.setItem(LANG_STORAGE_KEY, lang);
+            applyStaticTranslations();
+            updateLangButtonsUI();
+            updateAdminButtonUI();
+            updateAllViews();
+            renderTasks();
+            renderNotes();
+            renderMemories();
+        };
+
+        // Datos iniciales completos con los 122 invitados
+        const initialSeedData = {
+            guests: [
+                "Jesús Alberto Herrera Acosta", "Gloria Inés Becerra de Herrera", "Javier Eduardo Herrera Becerra", "Mariana Herrera Alfaro", "Juan Sebastián Herrera Alfaro", "Eva Herrera de Alfaro", "Carolina Alfaro de Herrera", "Jesús Alberto Herrera Becerra", "Chiara Lorenzzetti Herrera", "Isadora Lorenzzetti Herrera", "Carlos Eduardo Lorenzzetti Herrera", "Teresinha", "Miguel Ángel Herrera Becerra", "Laura Dauden", "Antonio Herrera Dauden", "Francisco Herrera Dauden", "Claudia Dauden", "José Dauden", "José Ricardo Herrera Becerra", "Rayana", "Ana María Herrera Becerra", "Anders Heebolholm", "Lili Heebolholm Herrera", "Rose Lucía Heebolholm Herrera", "BODIL", "María Carolina Becerra Riveros", "Daniel Felipe Hernández Becerra", "Nohora Clemencia Becerra Riveros", "Claudia Janette Gama Becerra", "Josué", "Alex", "David Alejandro Achuri Becerra", "Rosa Nelly Becerra Riveros", "Guillermo García Rozo", "Diana Carolina García Becerra", "José Fernando", "Luis Gabriel Becerra Riveros", "Santiago Becerra Flechas", "Rosaura Herrera Acosta", "Tomás Felipe Molano Herrera", "Daniel Herrera Acosta", "Amelia Saavedra de Herrera", "Juan Pablo Herrera Saavedra", "Andrea Cristina Herrera Saavedra", "Moisés Herrera Acosta", "Adriana Castro", "Juan Miguel Herrera Castro", "Martha Lucía Barrera", "Juan Nicolás Herrera Barrera", "Moisés Herrera Barrera", "José Manuel Herrera Barrera", "Laura Isabel Herrera Barrera", "Juan Carlos", "María José Herrera Barrera", "Mateo Cano Gómez", "Pilar Gómez", "Octavio Vargas", "Pastora de Barrera", "José Barrera", "Enrique Sevilla", "Luz Marina de Sevilla", "Stella", "Daniel Becerra", "Rosa", "Adriana Becerra", "Diego Armando Becerra", "Pareja de Diego Armando", "Guillermo Becerra", "Yaneth de Becerra", "Carlos Alirio Becerra", "Pilar", "Carlos Perez", "Adelfa Herrera", "Jairo", "Carmenza", "Marcela de Castro", "Hernán Castro", "Diego Castro", "Yuli", "Ángela Castro", "Alejandro", "Matías", "Nestor Julio Méndez", "María Cristina Molano", "Eliana Méndez Molano", "Miguel esposo de Eliana", "Emma", "Salvador", "Fabio Valenzuela", "Dora", "Yamile Ruiz", "William Rojas Cordero", "Mariangel Rojas Ruiz", "Yimmy Segura", "Astrid Fuentes", "Hernando Casas", "Alejandra Rincón", "Simón Hernándes Rincón", "Mariana Casas Rincón", "Clara Valenzuela", "Mariluz", "Clara Sánchez", "Alejandro Moya", "María Teresa Alfaro Herrera", "Daniel Higuera Alfaro", "Luis Francisco Alfaro Herrera", "José Miguel Alfaro Herrera", "Clara Inés Alfaro Herrera", "Andrés Felipe Medina Alfaro", "Valentina Medina Alfaro", "Juan Daniel", "Ancizar Martínez Blandón Pbro.", "Hernando Martinez", "Esposa Hernando Martinez", "Hijo Hernando Martínez", "Hermana María Cristina", "Hermana Antonia", "Hermana Ofelmina", "Hermana Paulina", "Padre Miguel Rozo", "Padre David Sánchez"
+            ].map(name => ({ name, phone: "", email: "", status: "Por confirmar", companions: 0, dietary: "" })),
+            budget: [
+                { concept: "Alquiler Salón Club Los Buhos", type: "fixed", amount: 3500000, paid: true },
+                { concept: "Banquete y Bebidas (por persona)", type: "variable", amount: 95000, paid: false },
+                { concept: "Decoración Floral y Ceremonia", type: "fixed", amount: 1800000, paid: false },
+                { concept: "Música en Vivo / DJ", type: "fixed", amount: 1500000, paid: false }
+            ],
+            tasks: [
+                { title: "Diseñar invitaciones digitales", assignee: "Organizadores", completed: true },
+                { title: "Enviar invitaciones por WhatsApp", assignee: "Familia", completed: false },
+                { title: "Confirmar menú y dietas especiales con el Club", assignee: "Organizadores", completed: false },
+                { title: "Ordenar ponqué de Bodas de Oro", assignee: "Organizadores", completed: false }
+            ],
+            notes: [
+                { author: "Familia Herrera Becerra", text: "¡Bienvenidos! Por favor confirmen su asistencia y déjennos saber si tienen alguna alergia o dieta especial." }
+            ],
+            memories: [
+                { author: "Chucho & Gloria", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80", caption: "Celebrando 50 años de historia juntos con toda nuestra familia y amigos." }
+            ]
+        };
+
+        // Inicializar Autenticación y Listeners en Tiempo Real
+        async function initApp() {
+            // Aplicar idioma guardado y Vista Invitado inmediatamente al cargar
+            applyStaticTranslations();
+            updateLangButtonsUI();
+            updateAdminButtonUI();
+            applyAdminVisibility();
+
+            // Cargar respaldo local inmediato para que la app nunca aparezca vacía
+            loadStandaloneState();
+
+            if (!firebaseConfig) {
+                isCloudMode = false;
+                renderAllStandalone();
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+                isCloudMode = true;
+
+                setupRealtimeListeners();
+            } catch (error) {
+                console.warn("Usando modo autónomo compatible con Google Sites:", error);
+                isCloudMode = false;
+                renderAllStandalone();
+            }
+        }
+
+        function loadStandaloneState() {
+            try {
+                const saved = window.name && window.name.startsWith('EVENTIFY_DATA:') 
+                    ? JSON.parse(window.name.replace('EVENTIFY_DATA:', '')) 
+                    : null;
+
+                if (saved && saved.guests && saved.guests.length > 0) {
+                    window.appState = { ...window.appState, ...saved };
+                } else {
+                    const now = Date.now();
+                    window.appState.guests = initialSeedData.guests.map((g, i) => ({
+                        ...g,
+                        id: 'guest_' + i + '_' + now,
+                        createdAt: now + i
+                    })).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+
+                    window.appState.budget = initialSeedData.budget.map((b, i) => ({
+                        ...b,
+                        id: 'budget_' + i + '_' + now,
+                        createdAt: now + i
+                    }));
+
+                    window.appState.tasks = initialSeedData.tasks.map((t, i) => ({
+                        ...t,
+                        id: 'task_' + i + '_' + now,
+                        createdAt: now + i
+                    }));
+
+                    window.appState.notes = initialSeedData.notes.map((n, i) => ({
+                        ...n,
+                        id: 'note_' + i + '_' + now
+                    }));
+
+                    window.appState.memories = initialSeedData.memories.map((m, i) => ({
+                        ...m,
+                        id: 'mem_' + i + '_' + now
+                    }));
+                    saveStandaloneState();
+                }
+            } catch (e) {
+                console.error("Error cargando estado autónomo:", e);
+            }
+        }
+
+        async function saveStandaloneState(actionType = null, actionPayload = null) {
+            try {
+                window.name = 'EVENTIFY_DATA:' + JSON.stringify({
+                    settings: window.appState.settings,
+                    guests: window.appState.guests,
+                    budget: window.appState.budget,
+                    tasks: window.appState.tasks,
+                    notes: window.appState.notes,
+                    memories: window.appState.memories
+                });
+            } catch (e) {
+                console.warn("No se pudo persistir en window.name:", e);
+            }
+
+            const webhook = window.appState.settings.webhookUrl;
+            if (webhook && actionType) {
+                try {
+                    await fetch(webhook, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: actionType, payload: actionPayload, timestamp: Date.now() })
+                    });
+                } catch (err) {
+                    console.warn("Error enviando a Google Sheets Webhook:", err);
+                }
+            }
+        }
+
+        function renderAllStandalone() {
+            renderSettings();
+            updateAllViews();
+            renderTasks();
+            renderNotes();
+            renderMemories();
+        }
+
+        // Rutas estrictas: /artifacts/{appId}/public/data/{collectionName}
+        function getPublicCollection(name) {
+            return collection(db, 'artifacts', appId, 'public', 'data', name);
+        }
+
+        function getPublicDoc(name, id) {
+            return doc(db, 'artifacts', appId, 'public', 'data', name, id);
+        }
+
+        function setupRealtimeListeners() {
+            if (!currentUser) return;
+
+            // 1. Configuración del Evento
+            onSnapshot(getPublicDoc('eventify_config', 'main'), async (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Actualizar automáticamente si aún conserva la fecha anterior
+                    if (data.date === "10 de enero de 2026") {
+                        data.date = "Domingo 10 de enero de 2027, a partir de las 12:00 m.";
+                        await updateDoc(getPublicDoc('eventify_config', 'main'), { date: data.date });
+                    }
+                    window.appState.settings = { ...window.appState.settings, ...data };
+                    renderSettings();
+                } else {
+                    // Inicializar configuración por defecto
+                    await setDoc(getPublicDoc('eventify_config', 'main'), window.appState.settings);
+                }
+            }, (err) => console.error("Error settings:", err));
+
+            // 2. Invitados
+            let guestsSeeded = false;
+            onSnapshot(getPublicCollection('eventify_guests'), async (snapshot) => {
+                const currentDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                const hasOldDemoData = currentDocs.length === 3 && currentDocs.some(g => g.name === "Familia Rodríguez (Carlos y Marta)");
+
+                if ((snapshot.empty || hasOldDemoData) && !guestsSeeded) {
+                    guestsSeeded = true;
+                    if (hasOldDemoData) {
+                        for (const oldDoc of currentDocs) {
+                            await deleteDoc(getPublicDoc('eventify_guests', oldDoc.id));
+                        }
+                    }
+                    const baseTime = Date.now();
+                    for (let i = 0; i < initialSeedData.guests.length; i++) {
+                        await addDoc(getPublicCollection('eventify_guests'), { ...initialSeedData.guests[i], createdAt: baseTime + i });
+                    }
+                    return;
+                }
+                window.appState.guests = currentDocs
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es'));
+                updateAllViews();
+            }, (err) => console.error("Error guests:", err));
+
+            // 3. Presupuesto
+            let budgetSeeded = false;
+            onSnapshot(getPublicCollection('eventify_budget'), async (snapshot) => {
+                if (snapshot.empty && !budgetSeeded) {
+                    budgetSeeded = true;
+                    for (const b of initialSeedData.budget) {
+                        await addDoc(getPublicCollection('eventify_budget'), { ...b, createdAt: Date.now() });
+                    }
+                    return;
+                }
+                window.appState.budget = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                updateAllViews();
+            }, (err) => console.error("Error budget:", err));
+
+            // 4. Logística (Tareas)
+            let tasksSeeded = false;
+            onSnapshot(getPublicCollection('eventify_tasks'), async (snapshot) => {
+                if (snapshot.empty && !tasksSeeded) {
+                    tasksSeeded = true;
+                    for (const t of initialSeedData.tasks) {
+                        await addDoc(getPublicCollection('eventify_tasks'), { ...t, createdAt: Date.now() });
+                    }
+                    return;
+                }
+                window.appState.tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+                renderTasks();
+            }, (err) => console.error("Error tasks:", err));
+
+            // 5. Notas Colaborativas
+            let notesSeeded = false;
+            onSnapshot(getPublicCollection('eventify_notes'), async (snapshot) => {
+                if (snapshot.empty && !notesSeeded) {
+                    notesSeeded = true;
+                    for (const n of initialSeedData.notes) {
+                        await addDoc(getPublicCollection('eventify_notes'), n);
+                    }
+                    return;
+                }
+                window.appState.notes = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderNotes();
+            }, (err) => console.error("Error notes:", err));
+
+            // 6. Muro de Recuerdos
+            let memoriesSeeded = false;
+            onSnapshot(getPublicCollection('eventify_memories'), async (snapshot) => {
+                if (snapshot.empty && !memoriesSeeded) {
+                    memoriesSeeded = true;
+                    for (const m of initialSeedData.memories) {
+                        await addDoc(getPublicCollection('eventify_memories'), m);
+                    }
+                    return;
+                }
+                window.appState.memories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderMemories();
+            }, (err) => console.error("Error memories:", err));
+        }
+
+        // =========================================================
+        // FUNCIONES DE RENDERIZADO Y CÁLCULO
+        // =========================================================
+
+        function updateAllViews() {
+            const guests = window.appState.guests;
+            
+            // Cálculos de asistencia
+            let totalConfirmedPeople = 0;
+            let confirmedGroups = 0;
+            let pendingCount = 0;
+            let declinedCount = 0;
+            let dietaryCount = 0;
+
+            guests.forEach(g => {
+                const companions = parseInt(g.companions) || 0;
+                if (g.status === 'Confirmado') {
+                    confirmedGroups++;
+                    totalConfirmedPeople += (1 + companions);
+                } else if (g.status === 'No asiste') {
+                    declinedCount++;
+                } else {
+                    pendingCount++;
+                }
+                if (g.dietary && g.dietary.trim() !== '' && g.dietary.toLowerCase() !== 'ninguna') {
+                    dietaryCount++;
+                }
+            });
+
+            // Actualizar KPIs superiores
+            document.getElementById('stat-total-attendees').textContent = totalConfirmedPeople;
+            document.getElementById('stat-confirmed-groups').textContent = `(${confirmedGroups} ${t('abbrevGuests')})`;
+            document.getElementById('stat-pending').textContent = pendingCount;
+            document.getElementById('stat-declined').textContent = `• ${declinedCount} ${t('declinedSuffix')}`;
+            document.getElementById('stat-dietary').textContent = dietaryCount;
+            document.getElementById('budget-attendees-count').textContent = `${totalConfirmedPeople} ${t('budgetAttendeesSuffix')}`;
+
+            // Actualizar Select de RSVP rápido
+            const quickSelect = document.getElementById('rsvp-quick-select');
+            const currentVal = quickSelect.value;
+            quickSelect.innerHTML = `<option value="">${t('rsvpQuickDefault')}</option>`;
+            guests.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = `${g.name} (${statusLabel(g.status)})`;
+                quickSelect.appendChild(opt);
+            });
+            quickSelect.value = currentVal;
+
+            renderGuestsTable();
+            renderBudget(totalConfirmedPeople);
+        }
+
+        function renderSettings() {
+            const s = window.appState.settings;
+            document.getElementById('event-title-display').textContent = s.title;
+            document.getElementById('event-date-display').textContent = s.date;
+            document.getElementById('event-location-display').textContent = s.location;
+            document.getElementById('event-map-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.location)}`;
+            const heroImg = document.getElementById('hero-bg-img');
+            if (heroImg && s.photoUrl) {
+                heroImg.src = s.photoUrl;
+            }
+        }
+
+        window.renderGuestsTable = function() {
+            const tbody = document.getElementById('guests-table-body');
+            const mobileContainer = document.getElementById('guests-mobile-cards');
+            const search = document.getElementById('guest-search').value.toLowerCase();
+            const statusFilter = document.getElementById('guest-status-filter').value;
+
+            const filtered = window.appState.guests.filter(g => {
+                const matchesSearch = (g.name || '').toLowerCase().includes(search) || 
+                                      (g.phone || '').toLowerCase().includes(search) || 
+                                      (g.dietary || '').toLowerCase().includes(search);
+                const matchesStatus = statusFilter === 'ALL' || g.status === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-stone-400">${t('noGuestsFound')}</td></tr>`;
+                mobileContainer.innerHTML = `<p class="py-8 text-center text-sm text-stone-400">${t('noGuestsFound')}</p>`;
+                return;
+            }
+
+            const statusOptionsHtml = (g) => `
+                <option value="Confirmado" ${g.status === 'Confirmado' ? 'selected' : ''}>${t('statusConfirmado')}</option>
+                <option value="Por confirmar" ${g.status === 'Por confirmar' ? 'selected' : ''}>${t('statusPorConfirmar')}</option>
+                <option value="No asiste" ${g.status === 'No asiste' ? 'selected' : ''}>${t('statusNoAsiste')}</option>
+            `;
+
+            // Renderizar versión tarjetas móvil
+            mobileContainer.innerHTML = filtered.map(g => {
+                const totalPax = g.status === 'No asiste' ? 0 : (1 + (parseInt(g.companions) || 0));
+                const badgeColor = g.status === 'Confirmado' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                                   g.status === 'No asiste' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                                   'bg-amber-100 text-amber-800 border-amber-200';
+                const cleanPhone = (g.phone || '').replace(/\D/g, '');
+                const waText = encodeURIComponent(t('waInviteMsg', { name: g.name, title: window.appState.settings.title, date: window.appState.settings.date, link: window.location.href }));
+
+                return `
+                    <div class="p-4 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <h4 class="font-bold text-stone-900 text-sm">${escapeHtml(g.name)}</h4>
+                                ${g.phone ? `<p class="text-xs text-stone-500 mt-0.5"><i class="fa-solid fa-phone mr-1"></i>${escapeHtml(g.phone)}</p>` : ''}
+                                ${g.email ? `<p class="text-xs text-stone-500 truncate max-w-[220px]"><i class="fa-regular fa-envelope mr-1"></i>${escapeHtml(g.email)}</p>` : ''}
+                            </div>
+                            <span class="px-2.5 py-1 rounded-lg bg-white border border-stone-200 font-bold text-stone-800 text-xs shrink-0">
+                                ${totalPax} ${t('pers')}
+                            </span>
+                        </div>
+                        ${g.dietary ? `<div class="text-xs px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/70"><i class="fa-solid fa-utensils mr-1"></i> ${escapeHtml(g.dietary)}</div>` : ''}
+                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-stone-200/70">
+                            <select onchange="quickChangeGuestStatus('${g.id}', this.value)" class="min-h-[38px] text-xs font-semibold px-3 py-1.5 rounded-xl border ${badgeColor} outline-none">
+                                ${statusOptionsHtml(g)}
+                            </select>
+                            <div class="flex items-center gap-1.5">
+                                ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}?text=${waText}" target="_blank" class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-brands fa-whatsapp text-base"></i></a>` : ''}
+                                <button onclick="openGuestModal('${g.id}')" class="w-9 h-9 rounded-xl bg-white border border-stone-200 text-stone-700 flex items-center justify-center"><i class="fa-solid fa-pen text-xs"></i></button>
+                                <button onclick="deleteItem('eventify_guests', '${g.id}')" class="admin-only w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Renderizar tabla escritorio
+            tbody.innerHTML = filtered.map(g => {
+                const totalPax = g.status === 'No asiste' ? 0 : (1 + (parseInt(g.companions) || 0));
+                const badgeColor = g.status === 'Confirmado' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                                   g.status === 'No asiste' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+                                   'bg-amber-100 text-amber-800 border-amber-200';
+                const cleanPhone = (g.phone || '').replace(/\D/g, '');
+                const waText = encodeURIComponent(t('waInviteMsg', { name: g.name, title: window.appState.settings.title, date: window.appState.settings.date, link: window.location.href }));
+
+                return `
+                    <tr class="hover:bg-stone-50/80 transition">
+                        <td class="py-3.5 px-4 font-medium text-stone-900">${escapeHtml(g.name)}</td>
+                        <td class="py-3.5 px-4 text-xs text-stone-600">
+                            ${g.phone ? `<div><i class="fa-solid fa-phone text-stone-400 mr-1"></i>${escapeHtml(g.phone)}</div>` : ''}
+                            ${g.email ? `<div class="truncate max-w-[180px]"><i class="fa-regular fa-envelope text-stone-400 mr-1"></i>${escapeHtml(g.email)}</div>` : ''}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <select onchange="quickChangeGuestStatus('${g.id}', this.value)" class="text-xs font-semibold px-2.5 py-1 rounded-full border ${badgeColor} outline-none cursor-pointer">
+                                ${statusOptionsHtml(g)}
+                            </select>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-lg bg-stone-100 font-semibold text-stone-800 text-xs">
+                                ${totalPax} ${t('pers')}
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs text-stone-600">
+                            ${g.dietary ? `<span class="px-2 py-1 rounded-md bg-amber-50 text-amber-900 border border-amber-200/60">${escapeHtml(g.dietary)}</span>` : '<span class="text-stone-400">-</span>'}
+                        </td>
+                        <td class="py-3.5 px-4 text-right whitespace-nowrap space-x-1">
+                            ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}?text=${waText}" target="_blank" title="${t('sendWaTooltip')}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+                            <button onclick="openGuestModal('${g.id}')" title="${t('editTooltip')}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 transition"><i class="fa-solid fa-pen text-xs"></i></button>
+                            <button onclick="deleteItem('eventify_guests', '${g.id}')" title="${t('deleteTooltip')}" class="admin-only inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            applyAdminVisibility();
+        };
+
+        function renderBudget(totalConfirmedPeople) {
+            const tbody = document.getElementById('budget-table-body');
+            const mobileContainer = document.getElementById('budget-mobile-cards');
+            let totalProjected = 0;
+            let totalPaid = 0;
+
+            if (window.appState.budget.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-stone-400">${t('budgetNoExpenses')}</td></tr>`;
+                mobileContainer.innerHTML = `<p class="py-6 text-center text-sm text-stone-400">${t('budgetNoExpenses')}</p>`;
+            } else {
+                mobileContainer.innerHTML = window.appState.budget.map(item => {
+                    const base = Number(item.amount) || 0;
+                    const subtotal = item.type === 'variable' ? base * totalConfirmedPeople : base;
+                    return `
+                        <div class="p-3.5 rounded-2xl border ${item.paid ? 'bg-emerald-50/40 border-emerald-200' : 'bg-white border-stone-200'} flex items-center justify-between gap-3">
+                            <label class="flex items-start gap-3 cursor-pointer flex-1 min-w-0">
+                                <input type="checkbox" ${item.paid ? 'checked' : ''} onchange="toggleBudgetPaid('${item.id}', this.checked)"
+                                       class="w-5 h-5 mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold ${item.paid ? 'line-through text-stone-400' : 'text-stone-900'} truncate">${escapeHtml(item.concept)}</p>
+                                    <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                        <span class="text-[11px] px-2 py-0.5 rounded-full ${item.type === 'variable' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+                                            ${item.type === 'variable' ? `×${totalConfirmedPeople} ${t('pers')}` : t('budgetFixedBadge')}
+                                        </span>
+                                        <span class="text-xs font-bold text-stone-800">${formatCurrency(subtotal)}</span>
+                                    </div>
+                                </div>
+                            </label>
+                            <button onclick="deleteItem('eventify_budget', '${item.id}')" class="w-9 h-9 rounded-xl text-rose-500 hover:bg-rose-50 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+                tbody.innerHTML = window.appState.budget.map(item => {
+                    const base = Number(item.amount) || 0;
+                    const subtotal = item.type === 'variable' ? base * totalConfirmedPeople : base;
+                    totalProjected += subtotal;
+                    if (item.paid) totalPaid += subtotal;
+
+                    return `
+                        <tr class="${item.paid ? 'bg-emerald-50/30' : 'hover:bg-stone-50'} transition">
+                            <td class="py-3 px-4 text-center">
+                                <input type="checkbox" ${item.paid ? 'checked' : ''} onchange="toggleBudgetPaid('${item.id}', this.checked)"
+                                       class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                            </td>
+                            <td class="py-3 px-4 font-medium ${item.paid ? 'line-through text-stone-400' : 'text-stone-900'}">${escapeHtml(item.concept)}</td>
+                            <td class="py-3 px-4">
+                                <span class="text-xs px-2 py-0.5 rounded-full ${item.type === 'variable' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+                                    ${item.type === 'variable' ? `${t('budgetVariableBadge')} (×${totalConfirmedPeople})` : t('budgetFixedOpt')}
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-right text-stone-600">${formatCurrency(base)}</td>
+                            <td class="py-3 px-4 text-right font-bold text-stone-900">${formatCurrency(subtotal)}</td>
+                            <td class="py-3 px-4 text-right">
+                                <button onclick="deleteItem('eventify_budget', '${item.id}')" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const pending = totalProjected - totalPaid;
+            document.getElementById('stat-budget-total').textContent = formatCurrency(totalProjected);
+            document.getElementById('stat-budget-paid').textContent = `${t('budgetPaidStat')}: ${formatCurrency(totalPaid)}`;
+            document.getElementById('budget-summary-total').textContent = formatCurrency(totalProjected);
+            document.getElementById('budget-summary-paid').textContent = formatCurrency(totalPaid);
+            document.getElementById('budget-summary-pending').textContent = formatCurrency(pending);
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('tasks-list');
+            const tasks = window.appState.tasks;
+            const completedCount = tasks.filter(t => t.completed).length;
+            const pct = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+            document.getElementById('tasks-progress-text').textContent = `${completedCount}/${tasks.length} (${pct}% ${t('tasksProgress')})`;
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<p class="text-center text-sm text-stone-400 py-6">${t('noTasks')}</p>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(t => `
+                <div class="flex items-center justify-between p-3.5 rounded-xl border ${t.completed ? 'bg-stone-50 border-stone-200/60' : 'bg-white border-stone-200 shadow-sm'} transition">
+                    <label class="flex items-center gap-3 cursor-pointer flex-1">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskCompleted('${t.id}', this.checked)"
+                               class="w-5 h-5 rounded-md text-gold-600 focus:ring-gold-500 cursor-pointer">
+                        <div>
+                            <span class="text-sm font-medium ${t.completed ? 'line-through text-stone-400' : 'text-stone-800'}">${escapeHtml(t.title)}</span>
+                            ${t.assignee ? `<span class="ml-2 text-xs px-2 py-0.5 rounded-md bg-gold-50 text-gold-800 border border-gold-200/60"><i class="fa-solid fa-user text-[10px] mr-1"></i>${escapeHtml(t.assignee)}</span>` : ''}
+                        </div>
+                    </label>
+                    <button onclick="deleteItem('eventify_tasks', '${t.id}')" class="text-stone-400 hover:text-rose-600 p-1.5 transition">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderNotes() {
+            const notes = window.appState.notes;
+            const html = notes.length === 0
+                ? `<p class="text-center text-xs text-stone-400 py-6">${t('noNotes')}</p>`
+                : notes.map(n => `
+                    <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/60 relative group">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold text-stone-800">${escapeHtml(n.author)}</span>
+                            <button onclick="deleteItem('eventify_notes', '${n.id}')" class="admin-only text-stone-400 hover:text-rose-500 text-xs opacity-0 group-hover:opacity-100 transition">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-stone-700 leading-relaxed">${escapeHtml(n.text)}</p>
+                    </div>
+                `).join('');
+
+            document.getElementById('quick-notes-list').innerHTML = html;
+            document.getElementById('full-notes-list').innerHTML = html;
+            applyAdminVisibility();
+        }
+
+        function renderMemories() {
+            const grid = document.getElementById('memories-grid');
+            const memories = window.appState.memories;
+
+            if (memories.length === 0) {
+                grid.innerHTML = `<p class="col-span-full text-center text-sm text-stone-400 py-8">${t('noMemories')}</p>`;
+                return;
+            }
+
+            grid.innerHTML = memories.map(m => `
+                <div class="rounded-2xl overflow-hidden border border-stone-200 bg-stone-50 flex flex-col shadow-sm">
+                    <div class="aspect-video bg-stone-200 relative overflow-hidden">
+                        <img src="${escapeHtml(m.url)}" alt="Recuerdo de ${escapeHtml(m.author)}" 
+                             onerror="this.src='https://placehold.co/600x400/f5eedc/7b4827?text=Ver+Enlace+de+Foto'"
+                             class="w-full h-full object-cover">
+                        <a href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer"
+                           class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-stone-900/75 text-white text-[11px] hover:bg-stone-900 backdrop-blur-sm transition">
+                            <i class="fa-solid fa-up-right-from-square mr-1"></i> ${t('memoryOpenOriginal')}
+                        </a>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <p class="text-sm text-stone-700 italic mb-3">"${escapeHtml(m.caption)}"</p>
+                        <div class="flex items-center justify-between text-xs text-stone-500 border-t border-stone-200/70 pt-2">
+                            <span class="font-semibold text-gold-800"><i class="fa-solid fa-heart text-rose-400 mr-1"></i> ${escapeHtml(m.author)}</span>
+                            <button onclick="deleteItem('eventify_memories', '${m.id}')" class="admin-only text-rose-500 hover:underline">${t('memoryDelete')}</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            applyAdminVisibility();
+        }
+
+        // =========================================================
+        // MANEJADORES DE EVENTOS Y ACCIONES CRUD
+        // =========================================================
+
+        window.loadGuestIntoRSVP = function(guestId) {
+            if (!guestId) {
+                resetRSVPForm();
+                return;
+            }
+            const g = window.appState.guests.find(item => item.id === guestId);
+            if (!g) return;
+
+            document.getElementById('rsvp-guest-id').value = g.id;
+            document.getElementById('rsvp-name').value = g.name || '';
+            document.getElementById('rsvp-phone').value = g.phone || '';
+            document.getElementById('rsvp-email').value = g.email || '';
+            document.getElementById('rsvp-dietary').value = g.dietary || '';
+
+            const radios = document.getElementsByName('rsvp-status');
+            radios.forEach(r => { r.checked = (r.value === g.status); });
+
+            const comp = parseInt(g.companions) || 0;
+            if (comp > 0) {
+                document.getElementById('rsvp-attendance-type').value = 'Acompañado';
+                document.getElementById('rsvp-companions').value = comp;
+            } else {
+                document.getElementById('rsvp-attendance-type').value = 'Solo';
+                document.getElementById('rsvp-companions').value = 1;
+            }
+            toggleCompanionFields();
+            updateCompanionsCount();
+        };
+
+        window.handleRSVPSubmit = async function(e) {
+            e.preventDefault();
+
+            const existingId = document.getElementById('rsvp-guest-id').value;
+            const status = document.querySelector('input[name="rsvp-status"]:checked').value;
+            const attType = document.getElementById('rsvp-attendance-type').value;
+            const companions = (status === 'No asiste' || attType === 'Solo') ? 0 : (parseInt(document.getElementById('rsvp-companions').value) || 1);
+
+            const payload = {
+                name: document.getElementById('rsvp-name').value.trim(),
+                phone: document.getElementById('rsvp-phone').value.trim(),
+                email: document.getElementById('rsvp-email').value.trim(),
+                status: status,
+                companions: companions,
+                dietary: status === 'No asiste' ? '' : document.getElementById('rsvp-dietary').value.trim(),
+                updatedAt: Date.now()
+            };
+
+            try {
+                if (isCloudMode && currentUser) {
+                    if (existingId) {
+                        await updateDoc(getPublicDoc('eventify_guests', existingId), payload);
+                        showToast(t('toastRsvpUpdated'), "success");
+                    } else {
+                        await addDoc(getPublicCollection('eventify_guests'), { ...payload, createdAt: Date.now() });
+                        showToast(t('toastRsvpThanks'), "success");
+                    }
+                } else {
+                    if (existingId) {
+                        const idx = window.appState.guests.findIndex(g => g.id === existingId);
+                        if (idx !== -1) window.appState.guests[idx] = { ...window.appState.guests[idx], ...payload };
+                        showToast(t('toastRsvpSaved'), "success");
+                    } else {
+                        window.appState.guests.push({ id: 'guest_' + Date.now(), ...payload, createdAt: Date.now() });
+                        window.appState.guests.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+                        showToast(t('toastRsvpThanks'), "success");
+                    }
+                    await saveStandaloneState('RSVP_UPDATE', payload);
+                    updateAllViews();
+                }
+                resetRSVPForm();
+            } catch (err) {
+                console.error(err);
+                showToast(t('toastRsvpError'), "error");
+            }
+        };
+
+        window.quickChangeGuestStatus = async function(guestId, newStatus) {
+            try {
+                if (isCloudMode && currentUser) {
+                    await updateDoc(getPublicDoc('eventify_guests', guestId), { status: newStatus });
+                } else {
+                    const idx = window.appState.guests.findIndex(g => g.id === guestId);
+                    if (idx !== -1) window.appState.guests[idx].status = newStatus;
+                    await saveStandaloneState('STATUS_CHANGE', { guestId, newStatus });
+                    updateAllViews();
+                }
+                showToast(t('toastStatusUpdated', { status: statusLabel(newStatus) }), "success");
+            } catch (err) {
+                showToast(t('toastStatusError'), "error");
+            }
+        };
+
+        window.handleSaveGuestModal = async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('modal-guest-id').value;
+            const payload = {
+                name: document.getElementById('modal-guest-name').value.trim(),
+                phone: document.getElementById('modal-guest-phone').value.trim(),
+                email: document.getElementById('modal-guest-email').value.trim(),
+                status: document.getElementById('modal-guest-status').value,
+                companions: parseInt(document.getElementById('modal-guest-companions').value) || 0,
+                dietary: document.getElementById('modal-guest-dietary').value.trim()
+            };
+
+            try {
+                if (isCloudMode && currentUser) {
+                    if (id) {
+                        await updateDoc(getPublicDoc('eventify_guests', id), payload);
+                        showToast(t('toastGuestUpdated'), "success");
+                    } else {
+                        await addDoc(getPublicCollection('eventify_guests'), { ...payload, createdAt: Date.now() });
+                        showToast(t('toastGuestAdded'), "success");
+                    }
+                } else {
+                    if (id) {
+                        const idx = window.appState.guests.findIndex(g => g.id === id);
+                        if (idx !== -1) window.appState.guests[idx] = { ...window.appState.guests[idx], ...payload };
+                        showToast(t('toastGuestUpdated'), "success");
+                    } else {
+                        window.appState.guests.push({ id: 'guest_' + Date.now(), ...payload, createdAt: Date.now() });
+                        window.appState.guests.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+                        showToast(t('toastGuestAdded'), "success");
+                    }
+                    await saveStandaloneState('GUEST_SAVE', payload);
+                    updateAllViews();
+                }
+                closeModal('guest-modal');
+            } catch (err) {
+                showToast(t('toastGuestError'), "error");
+            }
+        };
+
+        window.handleAddBudgetItem = async function(e) {
+            e.preventDefault();
+            const payload = {
+                concept: document.getElementById('budget-concept').value.trim(),
+                type: document.getElementById('budget-type').value,
+                amount: parseFloat(document.getElementById('budget-amount').value) || 0,
+                paid: false,
+                createdAt: Date.now()
+            };
+            if (isCloudMode && currentUser) {
+                await addDoc(getPublicCollection('eventify_budget'), payload);
+            } else {
+                window.appState.budget.push({ id: 'budget_' + Date.now(), ...payload });
+                await saveStandaloneState('BUDGET_ADD', payload);
+                updateAllViews();
+            }
+            e.target.reset();
+            showToast(t('toastBudgetAdded'), "success");
+        };
+
+        window.toggleBudgetPaid = async function(id, isPaid) {
+            if (isCloudMode && currentUser) {
+                await updateDoc(getPublicDoc('eventify_budget', id), { paid: isPaid });
+            } else {
+                const idx = window.appState.budget.findIndex(b => b.id === id);
+                if (idx !== -1) window.appState.budget[idx].paid = isPaid;
+                await saveStandaloneState('BUDGET_PAID', { id, isPaid });
+                updateAllViews();
+            }
+            showToast(isPaid ? t('toastMarkedPaid') : t('toastMarkedPending'), "info");
+        };
+
+        window.handleAddTask = async function(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('task-title').value.trim(),
+                assignee: document.getElementById('task-assignee').value.trim(),
+                completed: false,
+                createdAt: Date.now()
+            };
+            if (isCloudMode && currentUser) {
+                await addDoc(getPublicCollection('eventify_tasks'), payload);
+            } else {
+                window.appState.tasks.push({ id: 'task_' + Date.now(), ...payload });
+                await saveStandaloneState('TASK_ADD', payload);
+                renderTasks();
+            }
+            e.target.reset();
+            showToast(t('toastTaskAdded'), "success");
+        };
+
+        window.toggleTaskCompleted = async function(id, isCompleted) {
+            if (isCloudMode && currentUser) {
+                await updateDoc(getPublicDoc('eventify_tasks', id), { completed: isCompleted });
+            } else {
+                const idx = window.appState.tasks.findIndex(t => t.id === id);
+                if (idx !== -1) window.appState.tasks[idx].completed = isCompleted;
+                await saveStandaloneState('TASK_TOGGLE', { id, isCompleted });
+                renderTasks();
+            }
+        };
+
+        window.handleAddNote = async function(e, prefix) {
+            e.preventDefault();
+            const author = document.getElementById(`${prefix}-note-author`).value.trim();
+            const text = document.getElementById(`${prefix}-note-text`).value.trim();
+            const payload = { author, text, createdAt: Date.now() };
+            if (isCloudMode && currentUser) {
+                await addDoc(getPublicCollection('eventify_notes'), payload);
+            } else {
+                window.appState.notes.unshift({ id: 'note_' + Date.now(), ...payload });
+                await saveStandaloneState('NOTE_ADD', payload);
+                renderNotes();
+            }
+            document.getElementById(`${prefix}-note-text`).value = '';
+            showToast(t('toastNoteAdded'), "success");
+        };
+
+        window.handleAddMemory = async function(e) {
+            e.preventDefault();
+            const payload = {
+                author: document.getElementById('memory-author').value.trim(),
+                url: document.getElementById('memory-url').value.trim(),
+                caption: document.getElementById('memory-caption').value.trim(),
+                createdAt: Date.now()
+            };
+            if (isCloudMode && currentUser) {
+                await addDoc(getPublicCollection('eventify_memories'), payload);
+            } else {
+                window.appState.memories.unshift({ id: 'mem_' + Date.now(), ...payload });
+                await saveStandaloneState('MEMORY_ADD', payload);
+                renderMemories();
+            }
+            e.target.reset();
+            showToast(t('toastMemoryAdded'), "success");
+        };
+
+        window.handleSaveSettings = async function(e) {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('set-title').value.trim(),
+                date: document.getElementById('set-date').value.trim(),
+                location: document.getElementById('set-location').value.trim(),
+                photoUrl: document.getElementById('set-photo').value.trim(),
+                adminPin: document.getElementById('set-admin-pin').value.trim() || '1977',
+                webhookUrl: document.getElementById('set-webhook').value.trim()
+            };
+            if (isCloudMode && currentUser) {
+                await setDoc(getPublicDoc('eventify_config', 'main'), payload);
+            } else {
+                window.appState.settings = { ...window.appState.settings, ...payload };
+                await saveStandaloneState('SETTINGS_UPDATE', payload);
+                renderSettings();
+            }
+            closeModal('settings-modal');
+            showToast(t('toastSettingsUpdated'), "success");
+        };
+
+        window.deleteItem = async function(collectionName, docId) {
+            if (isCloudMode && currentUser) {
+                await deleteDoc(getPublicDoc(collectionName, docId));
+            } else {
+                if (collectionName === 'eventify_guests') {
+                    window.appState.guests = window.appState.guests.filter(i => i.id !== docId);
+                    updateAllViews();
+                } else if (collectionName === 'eventify_budget') {
+                    window.appState.budget = window.appState.budget.filter(i => i.id !== docId);
+                    updateAllViews();
+                } else if (collectionName === 'eventify_tasks') {
+                    window.appState.tasks = window.appState.tasks.filter(i => i.id !== docId);
+                    renderTasks();
+                } else if (collectionName === 'eventify_notes') {
+                    window.appState.notes = window.appState.notes.filter(i => i.id !== docId);
+                    renderNotes();
+                } else if (collectionName === 'eventify_memories') {
+                    window.appState.memories = window.appState.memories.filter(i => i.id !== docId);
+                    renderMemories();
+                }
+                await saveStandaloneState('DELETE_ITEM', { collectionName, docId });
+            }
+            showToast(t('toastItemDeleted'), "info");
+        };
+
+        window.exportGuestsCSV = function() {
+            const rows = window.appState.guests.map(g => {
+                const comp = parseInt(g.companions) || 0;
+                const total = g.status === 'No asiste' ? 0 : (1 + comp);
+                return [
+                    `"${(g.name || '').replace(/"/g, '""')}"`,
+                    `"${(g.phone || '').replace(/"/g, '""')}"`,
+                    `"${(g.email || '').replace(/"/g, '""')}"`,
+                    `"${statusLabel(g.status).replace(/"/g, '""')}"`,
+                    comp,
+                    total,
+                    `"${(g.dietary || '').replace(/"/g, '""')}"`
+                ].join(',');
+            });
+            const csvContent = "\uFEFF" + [t('csvHeaders'), ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Invitados_Bodas_de_Oro_Chucho_y_Gloria.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(t('toastCsvDownloaded'), "success");
+        };
+
+        // =========================================================
+        // UTILIDADES DE INTERFAZ Y NAVEGACIÓN
+        // =========================================================
+
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-gold-500', 'text-white', 'shadow-sm', 'font-semibold');
+                btn.classList.add('text-stone-600', 'hover:bg-stone-100', 'font-medium');
+            });
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.add('bg-gold-500', 'text-white', 'shadow-sm', 'font-semibold');
+            activeBtn.classList.remove('text-stone-600', 'hover:bg-stone-100', 'font-medium');
+        };
+
+        window.toggleAdminMode = function() {
+            if (window.appState.isAdmin) {
+                window.appState.isAdmin = false;
+                updateAdminButtonUI();
+                applyAdminVisibility();
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab && activeTab.classList.contains('admin-tab')) {
+                    switchTab('rsvp');
+                }
+                showToast(t('toastGuestViewReturned'), "info");
+            } else {
+                document.getElementById('admin-pin-input').value = '';
+                const modal = document.getElementById('admin-pin-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => document.getElementById('admin-pin-input').focus(), 100);
+            }
+        };
+
+        window.verifyAdminPin = function(e) {
+            e.preventDefault();
+            const enteredPin = document.getElementById('admin-pin-input').value.trim();
+            const validPin = window.appState.settings.adminPin || '1977';
+
+            if (enteredPin === validPin) {
+                window.appState.isAdmin = true;
+                closeModal('admin-pin-modal');
+                updateAdminButtonUI();
+                applyAdminVisibility();
+                showToast(t('toastAdminUnlocked'), "success");
+            } else {
+                showToast(t('toastWrongPin'), "error");
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-input').focus();
+            }
+        };
+
+        function updateAdminButtonUI() {
+            const label = document.getElementById('admin-mode-label');
+            const mobileLabel = document.getElementById('admin-mode-label-mobile');
+            const icon = document.getElementById('admin-mode-icon');
+            if (label) {
+                label.textContent = window.appState.isAdmin ? t('adminExit') : t('adminAccess');
+            }
+            if (mobileLabel) {
+                mobileLabel.textContent = window.appState.isAdmin ? t('adminExitMobile') : t('adminMobile');
+            }
+            if (icon) {
+                icon.className = window.appState.isAdmin 
+                    ? "fa-solid fa-lock-open text-emerald-400" 
+                    : "fa-solid fa-lock text-gold-300";
+            }
+        }
+
+        function applyAdminVisibility() {
+            const isAdmin = window.appState.isAdmin;
+            document.querySelectorAll('.admin-only, .admin-tab').forEach(el => {
+                el.style.display = isAdmin ? '' : 'none';
+            });
+            // Asegurar margen superior adecuado para invitados cuando se ocultan los KPIs
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) {
+                if (isAdmin) {
+                    mainContainer.classList.add('-mt-6');
+                    mainContainer.classList.remove('pt-6');
+                } else {
+                    mainContainer.classList.remove('-mt-6');
+                    mainContainer.classList.add('pt-6');
+                }
+            }
+        }
+
+        window.toggleCompanionFields = function() {
+            const status = document.querySelector('input[name="rsvp-status"]:checked').value;
+            const section = document.getElementById('companion-section');
+            section.style.display = status === 'No asiste' ? 'none' : 'block';
+        };
+
+        window.updateCompanionsCount = function() {
+            const type = document.getElementById('rsvp-attendance-type').value;
+            const wrapper = document.getElementById('companions-count-wrapper');
+            if (type === 'Acompañado') {
+                wrapper.classList.remove('hidden');
+            } else {
+                wrapper.classList.add('hidden');
+            }
+        };
+
+        window.resetRSVPForm = function() {
+            document.getElementById('rsvp-form').reset();
+            document.getElementById('rsvp-guest-id').value = '';
+            document.getElementById('rsvp-quick-select').value = '';
+            toggleCompanionFields();
+            updateCompanionsCount();
+        };
+
+        window.openGuestModal = function(guestId = null) {
+            const modal = document.getElementById('guest-modal');
+            if (guestId) {
+                const g = window.appState.guests.find(item => item.id === guestId);
+                document.getElementById('guest-modal-title').textContent = t('modalGuestEditTitle');
+                document.getElementById('modal-guest-id').value = g.id;
+                document.getElementById('modal-guest-name').value = g.name || '';
+                document.getElementById('modal-guest-phone').value = g.phone || '';
+                document.getElementById('modal-guest-email').value = g.email || '';
+                document.getElementById('modal-guest-status').value = g.status || 'Por confirmar';
+                document.getElementById('modal-guest-companions').value = g.companions || 0;
+                document.getElementById('modal-guest-dietary').value = g.dietary || '';
+            } else {
+                document.getElementById('guest-modal-title').textContent = t('modalGuestNewTitle');
+                document.getElementById('modal-guest-id').value = '';
+                document.getElementById('modal-guest-name').value = '';
+                document.getElementById('modal-guest-phone').value = '';
+                document.getElementById('modal-guest-email').value = '';
+                document.getElementById('modal-guest-status').value = 'Por confirmar';
+                document.getElementById('modal-guest-companions').value = 0;
+                document.getElementById('modal-guest-dietary').value = '';
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.openSettingsModal = function() {
+            const s = window.appState.settings;
+            document.getElementById('set-title').value = s.title;
+            document.getElementById('set-date').value = s.date;
+            document.getElementById('set-location').value = s.location;
+            document.getElementById('set-photo').value = s.photoUrl || '';
+            document.getElementById('set-admin-pin').value = s.adminPin || '1977';
+            document.getElementById('set-webhook').value = s.webhookUrl || '';
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.openBroadcastModal = function() {
+            const s = window.appState.settings;
+            const msg = t('broadcastMsg', { title: s.title, date: s.date, location: s.location, link: window.location.href });
+            document.getElementById('broadcast-message').value = msg;
+
+            const list = document.getElementById('whatsapp-quick-list');
+            const guestsWithPhone = window.appState.guests.filter(g => g.phone && g.phone.replace(/\D/g, '').length > 5);
+
+            if (guestsWithPhone.length === 0) {
+                list.innerHTML = `<p class="text-xs text-stone-400">${t('broadcastNoPhones')}</p>`;
+            } else {
+                list.innerHTML = guestsWithPhone.map(g => {
+                    const cleanPhone = g.phone.replace(/\D/g, '');
+                    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+                    return `
+                        <div class="flex items-center justify-between p-2 rounded-lg bg-stone-50 border border-stone-200 text-xs">
+                            <span class="font-medium text-stone-800">${escapeHtml(g.name)}</span>
+                            <a href="${url}" target="_blank" class="px-2.5 py-1 rounded-md bg-emerald-600 text-white font-semibold hover:bg-emerald-700">
+                                ${t('broadcastSend')} <i class="fa-brands fa-whatsapp ml-1"></i>
+                            </a>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const modal = document.getElementById('broadcast-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeModal = function(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.copyEventLink = function() {
+            copyToClipboard(window.location.href, t('toastLinkCopied'));
+        };
+
+        window.copyBroadcastText = function() {
+            const text = document.getElementById('broadcast-message').value;
+            copyToClipboard(text, t('toastBroadcastCopied'));
+        };
+
+        window.copyAllEmails = function() {
+            const emails = window.appState.guests.map(g => g.email).filter(e => e && e.includes('@')).join(', ');
+            if (!emails) {
+                showToast(t('toastNoEmails'), "error");
+                return;
+            }
+            copyToClipboard(emails, t('toastEmailsCopied'));
+        };
+
+        function copyToClipboard(text, successMsg) {
+            const tempInput = document.createElement("textarea");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand("copy");
+                showToast(successMsg, "success");
+            } catch (err) {
+                showToast(t('toastCopyFailed'), "error");
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(val);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = type === 'error' ? 'bg-rose-600 text-white' :
+                           type === 'info' ? 'bg-stone-800 text-white' :
+                           'bg-emerald-600 text-white';
+            const icon = type === 'error' ? 'fa-circle-exclamation' :
+                         type === 'info' ? 'fa-circle-info' : 'fa-circle-check';
+
+            toast.className = `${colors} px-4 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2.5 fade-in pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // Arrancar aplicación
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

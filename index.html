@@ -689,7 +689,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-stone-700 mb-1" data-i18n="settingsPinLabel">PIN de Acceso para Administradores</label>
-                    <input type="text" id="set-admin-pin" required maxlength="12" data-i18n-ph="settingsPinPh" placeholder="Ej. 1977" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
+                    <input type="text" id="set-admin-pin" required maxlength="12" data-i18n-ph="settingsPinPh" placeholder="Ej. 1001" class="w-full rounded-xl border border-stone-300 px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-gold-500">
                     <p class="text-[11px] text-stone-500 mt-1" data-i18n="settingsPinHint">Clave requerida para desbloquear los módulos de administración.</p>
                 </div>
                 <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-200/80">
@@ -719,7 +719,7 @@
             <form onsubmit="verifyAdminPin(event)" class="space-y-4">
                 <p class="text-xs text-stone-500" data-i18n="pinModalHint">Ingresa el PIN de administrador para gestionar invitados, presupuesto y logística.</p>
                 <div>
-                    <input type="password" id="admin-pin-input" required data-i18n-ph="pinModalPh" placeholder="Ingresa el PIN (ej. 1977)" inputmode="numeric"
+                    <input type="password" id="admin-pin-input" required data-i18n-ph="pinModalPh" placeholder="Ingresa el PIN (ej. 1001)" inputmode="numeric"
                            class="w-full min-h-[44px] rounded-xl border border-stone-300 px-3.5 py-2.5 text-center text-base font-bold tracking-widest outline-none focus:ring-2 focus:ring-gold-500">
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
@@ -786,7 +786,7 @@
                 date: "Domingo 10 de enero de 2027, a partir de las 12:00 m.",
                 location: "Club Los Buhos, Cl. 200 #55-79, Bogotá, Cundinamarca",
                 photoUrl: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1920&q=80",
-                adminPin: "1977",
+                adminPin: "1001",
                 webhookUrl: ""
             },
             guests: [],
@@ -868,14 +868,14 @@
                 settingsTitle: "Personalizar Evento", settingsEventTitleLabel: "Título del Evento", settingsDateLabel: "Fecha y Hora",
                 settingsLocationLabel: "Lugar (Dirección)", settingsPhotoLabel: "URL de Fotografía de los Homenajeados (Encabezado)",
                 settingsPhotoHint: "Pega un enlace directo a una foto de Chucho & Gloria.",
-                settingsPinLabel: "PIN de Acceso para Administradores", settingsPinPh: "Ej. 1977",
+                settingsPinLabel: "PIN de Acceso para Administradores", settingsPinPh: "Ej. 1001",
                 settingsPinHint: "Clave requerida para desbloquear los módulos de administración.",
                 settingsCloudLabel: "Conexión Nube Externa / Google Sheets (Opcional para Google Sites)",
                 settingsCloudHint: "Si alojas esta web en Google Sites, pega aquí la URL de tu Web App de Google Apps Script para sincronizar respuestas en tiempo real en Google Sheets.",
                 settingsUpdateBtn: "Actualizar Encabezado",
                 pinModalTitle: "Acceso para Organizadores",
                 pinModalHint: "Ingresa el PIN de administrador para gestionar invitados, presupuesto y logística.",
-                pinModalPh: "Ingresa el PIN (ej. 1977)", pinModalUnlock: "Desbloquear",
+                pinModalPh: "Ingresa el PIN (ej. 1001)", pinModalUnlock: "Desbloquear",
                 broadcastTitle: "Centro de Contacto con Invitados",
                 broadcastMessageLabel: "Mensaje de Invitación o Novedad (Listo para copiar)",
                 broadcastCopyMsg: "Copiar Mensaje + Enlace", broadcastCopyEmails: "Copiar Todos los Correos",
@@ -971,14 +971,14 @@
                 settingsTitle: "Customize Event", settingsEventTitleLabel: "Event Title", settingsDateLabel: "Date and Time",
                 settingsLocationLabel: "Location (Address)", settingsPhotoLabel: "Honorees' Photo URL (Header)",
                 settingsPhotoHint: "Paste a direct link to a photo of Chucho & Gloria.",
-                settingsPinLabel: "Admin Access PIN", settingsPinPh: "E.g. 1977",
+                settingsPinLabel: "Admin Access PIN", settingsPinPh: "E.g. 1001",
                 settingsPinHint: "Password required to unlock the admin modules.",
                 settingsCloudLabel: "External Cloud Connection / Google Sheets (Optional, for Google Sites)",
                 settingsCloudHint: "If you host this site on Google Sites, paste your Google Apps Script Web App URL here to sync responses in real time to Google Sheets.",
                 settingsUpdateBtn: "Update Header",
                 pinModalTitle: "Organizer Access",
                 pinModalHint: "Enter the admin PIN to manage guests, budget and logistics.",
-                pinModalPh: "Enter PIN (e.g. 1977)", pinModalUnlock: "Unlock",
+                pinModalPh: "Enter PIN (e.g. 1001)", pinModalUnlock: "Unlock",
                 broadcastTitle: "Guest Contact Center",
                 broadcastMessageLabel: "Invitation or Update Message (Ready to copy)",
                 broadcastCopyMsg: "Copy Message + Link", broadcastCopyEmails: "Copy All Emails",
@@ -1872,7 +1872,7 @@
                 date: document.getElementById('set-date').value.trim(),
                 location: document.getElementById('set-location').value.trim(),
                 photoUrl: document.getElementById('set-photo').value.trim(),
-                adminPin: document.getElementById('set-admin-pin').value.trim() || '1977',
+                adminPin: document.getElementById('set-admin-pin').value.trim() || '1001',
                 webhookUrl: document.getElementById('set-webhook').value.trim()
             };
             if (isCloudMode && currentUser) {
@@ -1977,7 +1977,7 @@
         window.verifyAdminPin = function(e) {
             e.preventDefault();
             const enteredPin = document.getElementById('admin-pin-input').value.trim();
-            const validPin = window.appState.settings.adminPin || '1977';
+            const validPin = window.appState.settings.adminPin || '1001';
 
             if (enteredPin === validPin) {
                 window.appState.isAdmin = true;
@@ -2083,7 +2083,7 @@
             document.getElementById('set-date').value = s.date;
             document.getElementById('set-location').value = s.location;
             document.getElementById('set-photo').value = s.photoUrl || '';
-            document.getElementById('set-admin-pin').value = s.adminPin || '1977';
+            document.getElementById('set-admin-pin').value = s.adminPin || '1001';
             document.getElementById('set-webhook').value = s.webhookUrl || '';
             const modal = document.getElementById('settings-modal');
             modal.classList.remove('hidden');

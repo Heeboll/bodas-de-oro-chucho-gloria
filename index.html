@@ -1249,12 +1249,12 @@
                     if (key === '|') return;
                     const idx = window.appState.guests.findIndex(g => guestMatchKey(g.phone, g.name) === key);
                     const merged = {
-                        name: remote.name || (idx !== -1 ? window.appState.guests[idx].name : ''),
-                        phone: remote.phone || (idx !== -1 ? window.appState.guests[idx].phone : ''),
-                        email: remote.email || (idx !== -1 ? window.appState.guests[idx].email : ''),
-                        status: remote.status || 'Por confirmar',
+                        name: remote.name != null ? String(remote.name) : (idx !== -1 ? window.appState.guests[idx].name : ''),
+                        phone: remote.phone != null ? String(remote.phone) : (idx !== -1 ? window.appState.guests[idx].phone : ''),
+                        email: remote.email != null ? String(remote.email) : (idx !== -1 ? window.appState.guests[idx].email : ''),
+                        status: remote.status ? String(remote.status) : 'Por confirmar',
                         companions: remote.companions !== '' && remote.companions != null ? Number(remote.companions) : 0,
-                        dietary: remote.dietary || '',
+                        dietary: remote.dietary != null ? String(remote.dietary) : '',
                         updatedAt: remote.updatedAt || Date.now()
                     };
                     if (idx !== -1) {

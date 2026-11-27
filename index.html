@@ -1216,7 +1216,11 @@
         // window.name. Esta función trae el estado real desde la nube y lo fusiona
         // con la lista local para que el organizador vea todas las respuestas.
         function normalizeMatchKey(value) {
-            return value ? String(value).toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+            return value ? String(value).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        }
+
+        function guestMatchKey(phone, name) {
+            return normalizeMatchKey(phone) + '|' + normalizeMatchKey(name);
         }
 
         window.syncGuestsFromCloud = async function(showFeedback) {
@@ -1241,11 +1245,9 @@
 
                 let changed = 0;
                 data.guests.forEach(remote => {
-                    const key = normalizeMatchKey(remote.phone) || normalizeMatchKey(remote.name);
-                    if (!key) return;
-                    const idx = window.appState.guests.findIndex(g =>
-                        normalizeMatchKey(g.phone) === key || normalizeMatchKey(g.name) === key
-                    );
+                    const key = guestMatchKey(remote.phone, remote.name);
+                    if (key === '|') return;
+                    const idx = window.appState.guests.findIndex(g => guestMatchKey(g.phone, g.name) === key);
                     const merged = {
                         name: remote.name || (idx !== -1 ? window.appState.guests[idx].name : ''),
                         phone: remote.phone || (idx !== -1 ? window.appState.guests[idx].phone : ''),
@@ -1995,7 +1997,9 @@
             if (isCloudMode && currentUser) {
                 await deleteDoc(getPublicDoc(collectionName, docId));
             } else {
+                let deletedGuest = null;
                 if (collectionName === 'eventify_guests') {
+                    deletedGuest = window.appState.guests.find(i => i.id === docId) || null;
                     window.appState.guests = window.appState.guests.filter(i => i.id !== docId);
                     updateAllViews();
                 } else if (collectionName === 'eventify_budget') {
@@ -2011,7 +2015,11 @@
                     window.appState.memories = window.appState.memories.filter(i => i.id !== docId);
                     renderMemories();
                 }
-                await saveStandaloneState('DELETE_ITEM', { collectionName, docId });
+                await saveStandaloneState('DELETE_ITEM', {
+                    collectionName, docId,
+                    phone: deletedGuest ? deletedGuest.phone : undefined,
+                    name: deletedGuest ? deletedGuest.name : undefined
+                });
             }
             showToast(t('toastItemDeleted'), "info");
         };

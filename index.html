@@ -372,8 +372,14 @@
                     <div>
                         <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900" data-i18n="guestsTitle">Directorio de Invitados</h2>
                         <p class="text-xs sm:text-sm text-stone-500" data-i18n="guestsSubtitle">Gestiona el listado, filtra por estado y contacta directamente por WhatsApp o correo.</p>
+                        <p id="last-sync-note" class="text-[11px] text-stone-400 mt-1 hidden"></p>
                     </div>
                     <div class="grid grid-cols-1 sm:flex items-center gap-2.5">
+                        <!-- Botón Sincronizar con Google Sheets -->
+                        <button id="sync-guests-btn" onclick="window.syncGuestsFromCloud(true)" class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-rotate text-base"></i>
+                            <span data-i18n="guestsSync">Sincronizar Respuestas</span>
+                        </button>
                         <!-- Botón Exportar Excel/CSV -->
                         <button onclick="exportGuestsCSV()" class="min-h-[44px] px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-stone-800 hover:bg-stone-900 text-white shadow-sm transition flex items-center justify-center gap-2">
                             <i class="fa-solid fa-file-excel text-emerald-400 text-base"></i>
@@ -830,6 +836,11 @@
                 guestsTitle: "Directorio de Invitados",
                 guestsSubtitle: "Gestiona el listado, filtra por estado y contacta directamente por WhatsApp o correo.",
                 guestsExportCsv: "Descargar Excel (CSV)", guestsBroadcast: "Enviar Novedades / Invitación", guestsAdd: "Añadir Invitado",
+                guestsSync: "Sincronizar Respuestas", guestsSyncing: "Sincronizando...",
+                toastSyncSuccess: "Respuestas actualizadas: {count} nuevas o modificadas.",
+                toastSyncNone: "Ya estás al día, no hay respuestas nuevas.",
+                toastSyncError: "No se pudo sincronizar con Google Sheets.",
+                lastSyncPrefix: "Última sincronización:",
                 guestsSearchPh: "Buscar por nombre, teléfono o dieta...",
                 filterAll: "Todos los estados", filterConfirmed: "Confirmados", filterPending: "Por confirmar", filterDeclined: "No asisten",
                 thGuest: "Invitado / Familia", thContact: "Contacto", thStatus: "Estado", thSeats: "Cupos Totales",
@@ -932,6 +943,11 @@
                 notesLoading: "Loading notes...", notesNamePh: "Your name", notesTextPh: "Write an idea, question or greeting...",
                 guestsTitle: "Guest Directory",
                 guestsSubtitle: "Manage the list, filter by status and contact guests directly via WhatsApp or email.",
+                guestsSync: "Sync Responses", guestsSyncing: "Syncing...",
+                toastSyncSuccess: "Responses updated: {count} new or changed.",
+                toastSyncNone: "You're already up to date, no new responses.",
+                toastSyncError: "Could not sync with Google Sheets.",
+                lastSyncPrefix: "Last synced:",
                 guestsExportCsv: "Download Excel (CSV)", guestsBroadcast: "Send Updates / Invitation", guestsAdd: "Add Guest",
                 guestsSearchPh: "Search by name, phone or diet...",
                 filterAll: "All statuses", filterConfirmed: "Confirmed", filterPending: "Pending", filterDeclined: "Not attending",
@@ -1093,6 +1109,11 @@
             if (!firebaseConfig) {
                 isCloudMode = false;
                 renderAllStandalone();
+                // Traer las respuestas reales desde Google Sheets (otros dispositivos
+                // no comparten window.name, así que sin esto el organizador solo ve
+                // lo que pasó en su propio navegador).
+                window.syncGuestsFromCloud(false);
+                setInterval(() => window.syncGuestsFromCloud(false), 60000);
                 return;
             }
 
@@ -1189,6 +1210,90 @@
                 }
             }
         }
+
+        // Las respuestas que llegan desde otros dispositivos solo existen en la
+        // hoja de Google Sheets (vía webhook): cada navegador solo conoce su propio
+        // window.name. Esta función trae el estado real desde la nube y lo fusiona
+        // con la lista local para que el organizador vea todas las respuestas.
+        function normalizeMatchKey(value) {
+            return value ? String(value).toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        }
+
+        window.syncGuestsFromCloud = async function(showFeedback) {
+            const webhook = window.appState.settings.webhookUrl;
+            if (!webhook) return;
+
+            const btn = document.getElementById('sync-guests-btn');
+            const btnLabel = btn ? btn.querySelector('span') : null;
+            const originalLabel = btnLabel ? btnLabel.textContent : null;
+            if (showFeedback && btn) {
+                btn.disabled = true;
+                if (btnLabel) btnLabel.textContent = t('guestsSyncing');
+            }
+
+            try {
+                const sep = webhook.includes('?') ? '&' : '?';
+                const res = await fetch(webhook + sep + 'action=guests');
+                const data = await res.json();
+                if (!data || data.ok !== true || !Array.isArray(data.guests)) {
+                    throw new Error('Respuesta inesperada del webhook');
+                }
+
+                let changed = 0;
+                data.guests.forEach(remote => {
+                    const key = normalizeMatchKey(remote.phone) || normalizeMatchKey(remote.name);
+                    if (!key) return;
+                    const idx = window.appState.guests.findIndex(g =>
+                        normalizeMatchKey(g.phone) === key || normalizeMatchKey(g.name) === key
+                    );
+                    const merged = {
+                        name: remote.name || (idx !== -1 ? window.appState.guests[idx].name : ''),
+                        phone: remote.phone || (idx !== -1 ? window.appState.guests[idx].phone : ''),
+                        email: remote.email || (idx !== -1 ? window.appState.guests[idx].email : ''),
+                        status: remote.status || 'Por confirmar',
+                        companions: remote.companions !== '' && remote.companions != null ? Number(remote.companions) : 0,
+                        dietary: remote.dietary || '',
+                        updatedAt: remote.updatedAt || Date.now()
+                    };
+                    if (idx !== -1) {
+                        const existing = window.appState.guests[idx];
+                        const isNewer = (merged.updatedAt || 0) >= (existing.updatedAt || 0);
+                        const isDifferent = existing.status !== merged.status || existing.companions !== merged.companions
+                            || existing.dietary !== merged.dietary || existing.email !== merged.email;
+                        if (isNewer && isDifferent) {
+                            window.appState.guests[idx] = { ...existing, ...merged };
+                            changed++;
+                        }
+                    } else {
+                        window.appState.guests.push({ id: 'guest_cloud_' + key + '_' + Date.now(), ...merged, createdAt: Date.now() });
+                        changed++;
+                    }
+                });
+
+                if (changed > 0) {
+                    window.appState.guests.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+                    updateAllViews();
+                }
+
+                const note = document.getElementById('last-sync-note');
+                if (note) {
+                    note.textContent = t('lastSyncPrefix') + ' ' + new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                    note.classList.remove('hidden');
+                }
+
+                if (showFeedback) {
+                    showToast(changed > 0 ? t('toastSyncSuccess', { count: changed }) : t('toastSyncNone'), "success");
+                }
+            } catch (err) {
+                console.warn("Error sincronizando invitados desde Google Sheets:", err);
+                if (showFeedback) showToast(t('toastSyncError'), "error");
+            } finally {
+                if (showFeedback && btn) {
+                    btn.disabled = false;
+                    if (btnLabel && originalLabel) btnLabel.textContent = originalLabel;
+                }
+            }
+        };
 
         function renderAllStandalone() {
             renderSettings();

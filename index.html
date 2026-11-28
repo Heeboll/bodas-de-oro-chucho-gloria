@@ -563,8 +563,17 @@
             <!-- Muro de Fotos y Recuerdos (2 columnas) -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80">
-                    <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900 mb-1" data-i18n="memoriesTitle">Muro de Recuerdos de Chucho & Gloria</h2>
-                    <p class="text-xs sm:text-sm text-stone-500" data-i18n="memoriesSubtitle">Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.</p>
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-1">
+                        <div>
+                            <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900" data-i18n="memoriesTitle">Muro de Recuerdos de Chucho & Gloria</h2>
+                            <p class="text-xs sm:text-sm text-stone-500" data-i18n="memoriesSubtitle">Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.</p>
+                        </div>
+                        <button id="sync-wall-btn" onclick="window.syncMemoryWallFromCloud(true)" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-600 hover:bg-sky-700 text-white shadow-sm transition flex items-center justify-center gap-2 shrink-0">
+                            <i class="fa-solid fa-rotate text-sm"></i>
+                            <span data-i18n="memoriesSync">Sincronizar Muro</span>
+                        </button>
+                    </div>
+                    <p id="last-wall-sync-note" class="text-[11px] text-stone-400 mb-1 hidden"></p>
                     <p class="text-[11px] text-stone-400 mb-5" data-i18n="memoriesUrlHint">Para Google Drive y Dropbox, pega el enlace para compartir normal. Para Google Photos (o si la imagen no aparece), abre la foto, haz clic derecho sobre ella y elige "Copiar dirección de la imagen".</p>
 
                     <form onsubmit="handleAddMemory(event)" class="bg-gold-50/50 p-3.5 sm:p-4 rounded-xl border border-gold-200/70 space-y-3 mb-6">
@@ -868,6 +877,7 @@
                 memoriesTitle: "Muro de Recuerdos de Chucho & Gloria",
                 memoriesSubtitle: "Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.",
                 memoriesUrlHint: "Para Google Drive y Dropbox, pega el enlace para compartir normal. Para Google Photos (o si la imagen no aparece), abre la foto, haz clic derecho sobre ella y elige \"Copiar dirección de la imagen\".",
+                memoriesSync: "Sincronizar Muro",
                 memoryAuthorPh: "Tu nombre *", memoryUrlPh: "Enlace de la foto (URL, Drive) *",
                 memoryCaptionPh: "Escribe una anécdota o felicitación...", memoryPublish: "Publicar Recuerdo",
                 memoryOpenOriginal: "Abrir original", memoryDelete: "Eliminar",
@@ -979,6 +989,7 @@
                 memoriesTitle: "Chucho & Gloria's Memory Wall",
                 memoriesSubtitle: "Share photo links (Google Drive, Dropbox, Google Photos or a public URL) and leave a special message.",
                 memoriesUrlHint: "For Google Drive and Dropbox, paste the normal share link. For Google Photos (or if the image doesn't show), open the photo, right-click it and choose \"Copy image address\".",
+                memoriesSync: "Sync Wall",
                 memoryAuthorPh: "Your name *", memoryUrlPh: "Photo link (URL, Drive) *",
                 memoryCaptionPh: "Write an anecdote or congratulations...", memoryPublish: "Publish Memory",
                 memoryOpenOriginal: "Open original", memoryDelete: "Delete",
@@ -1121,7 +1132,9 @@
                 // no comparten window.name, así que sin esto el organizador solo ve
                 // lo que pasó en su propio navegador).
                 window.syncGuestsFromCloud(false);
+                window.syncMemoryWallFromCloud(false);
                 setInterval(() => window.syncGuestsFromCloud(false), 60000);
+                setInterval(() => window.syncMemoryWallFromCloud(false), 60000);
                 return;
             }
 
@@ -1296,6 +1309,95 @@
                 }
             } catch (err) {
                 console.warn("Error sincronizando invitados desde Google Sheets:", err);
+                if (showFeedback) showToast(t('toastSyncError'), "error");
+            } finally {
+                if (showFeedback && btn) {
+                    btn.disabled = false;
+                    if (btnLabel && originalLabel) btnLabel.textContent = originalLabel;
+                }
+            }
+        };
+
+        // Las fotos y notas publicadas desde un teléfono solo viven en el window.name
+        // de ESE navegador: sin esto, una computadora distinta nunca las ve. Trae el
+        // estado real desde Google Sheets y fusiona por createdAt (evita duplicados).
+        async function fetchAndMergeMemories() {
+            const webhook = window.appState.settings.webhookUrl;
+            if (!webhook) return 0;
+            const sep = webhook.includes('?') ? '&' : '?';
+            const res = await fetch(webhook + sep + 'action=memories');
+            const data = await res.json();
+            if (!data || data.ok !== true || !Array.isArray(data.memories)) return 0;
+
+            let changed = 0;
+            data.memories.forEach(remote => {
+                if (!remote.createdAt) return;
+                if (window.appState.memories.some(m => m.createdAt === remote.createdAt)) return;
+                window.appState.memories.push({
+                    id: 'mem_cloud_' + remote.createdAt,
+                    author: String(remote.author || ''),
+                    url: String(remote.url || ''),
+                    caption: String(remote.caption || ''),
+                    createdAt: remote.createdAt
+                });
+                changed++;
+            });
+            if (changed > 0) {
+                window.appState.memories.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderMemories();
+            }
+            return changed;
+        }
+
+        async function fetchAndMergeNotes() {
+            const webhook = window.appState.settings.webhookUrl;
+            if (!webhook) return 0;
+            const sep = webhook.includes('?') ? '&' : '?';
+            const res = await fetch(webhook + sep + 'action=notes');
+            const data = await res.json();
+            if (!data || data.ok !== true || !Array.isArray(data.notes)) return 0;
+
+            let changed = 0;
+            data.notes.forEach(remote => {
+                if (!remote.createdAt) return;
+                if (window.appState.notes.some(n => n.createdAt === remote.createdAt)) return;
+                window.appState.notes.push({
+                    id: 'note_cloud_' + remote.createdAt,
+                    author: String(remote.author || ''),
+                    text: String(remote.text || ''),
+                    createdAt: remote.createdAt
+                });
+                changed++;
+            });
+            if (changed > 0) {
+                window.appState.notes.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                renderNotes();
+            }
+            return changed;
+        }
+
+        window.syncMemoryWallFromCloud = async function(showFeedback) {
+            const btn = document.getElementById('sync-wall-btn');
+            const btnLabel = btn ? btn.querySelector('span') : null;
+            const originalLabel = btnLabel ? btnLabel.textContent : null;
+            if (showFeedback && btn) {
+                btn.disabled = true;
+                if (btnLabel) btnLabel.textContent = t('guestsSyncing');
+            }
+            try {
+                const [memChanged, noteChanged] = await Promise.all([fetchAndMergeMemories(), fetchAndMergeNotes()]);
+                const total = memChanged + noteChanged;
+
+                const note = document.getElementById('last-wall-sync-note');
+                if (note) {
+                    note.textContent = t('lastSyncPrefix') + ' ' + new Date().toLocaleTimeString(currentLang === 'es' ? 'es-CO' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                    note.classList.remove('hidden');
+                }
+                if (showFeedback) {
+                    showToast(total > 0 ? t('toastSyncSuccess', { count: total }) : t('toastSyncNone'), "success");
+                }
+            } catch (err) {
+                console.warn("Error sincronizando el muro de recuerdos desde Google Sheets:", err);
                 if (showFeedback) showToast(t('toastSyncError'), "error");
             } finally {
                 if (showFeedback && btn) {
@@ -2026,6 +2128,7 @@
                 await deleteDoc(getPublicDoc(collectionName, docId));
             } else {
                 let deletedGuest = null;
+                let deletedCreatedAt = null;
                 if (collectionName === 'eventify_guests') {
                     deletedGuest = window.appState.guests.find(i => i.id === docId) || null;
                     window.appState.guests = window.appState.guests.filter(i => i.id !== docId);
@@ -2037,16 +2140,21 @@
                     window.appState.tasks = window.appState.tasks.filter(i => i.id !== docId);
                     renderTasks();
                 } else if (collectionName === 'eventify_notes') {
+                    const deletedNote = window.appState.notes.find(i => i.id === docId);
+                    deletedCreatedAt = deletedNote ? deletedNote.createdAt : null;
                     window.appState.notes = window.appState.notes.filter(i => i.id !== docId);
                     renderNotes();
                 } else if (collectionName === 'eventify_memories') {
+                    const deletedMemory = window.appState.memories.find(i => i.id === docId);
+                    deletedCreatedAt = deletedMemory ? deletedMemory.createdAt : null;
                     window.appState.memories = window.appState.memories.filter(i => i.id !== docId);
                     renderMemories();
                 }
                 await saveStandaloneState('DELETE_ITEM', {
                     collectionName, docId,
                     phone: deletedGuest ? deletedGuest.phone : undefined,
-                    name: deletedGuest ? deletedGuest.name : undefined
+                    name: deletedGuest ? deletedGuest.name : undefined,
+                    createdAt: deletedCreatedAt || undefined
                 });
             }
             showToast(t('toastItemDeleted'), "info");

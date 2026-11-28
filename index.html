@@ -564,7 +564,8 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-stone-200/80">
                     <h2 class="font-serif text-xl sm:text-2xl font-bold text-stone-900 mb-1" data-i18n="memoriesTitle">Muro de Recuerdos de Chucho & Gloria</h2>
-                    <p class="text-xs sm:text-sm text-stone-500 mb-5" data-i18n="memoriesSubtitle">Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.</p>
+                    <p class="text-xs sm:text-sm text-stone-500" data-i18n="memoriesSubtitle">Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.</p>
+                    <p class="text-[11px] text-stone-400 mb-5" data-i18n="memoriesUrlHint">Para Google Drive y Dropbox, pega el enlace para compartir normal. Para Google Photos (o si la imagen no aparece), abre la foto, haz clic derecho sobre ella y elige "Copiar dirección de la imagen".</p>
 
                     <form onsubmit="handleAddMemory(event)" class="bg-gold-50/50 p-3.5 sm:p-4 rounded-xl border border-gold-200/70 space-y-3 mb-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -866,6 +867,7 @@
                 tasksProgress: "completado", noTasks: "No hay tareas pendientes.",
                 memoriesTitle: "Muro de Recuerdos de Chucho & Gloria",
                 memoriesSubtitle: "Comparte enlaces de fotos (Google Drive, Dropbox, Google Photos o URL pública) y deja un mensaje especial.",
+                memoriesUrlHint: "Para Google Drive y Dropbox, pega el enlace para compartir normal. Para Google Photos (o si la imagen no aparece), abre la foto, haz clic derecho sobre ella y elige \"Copiar dirección de la imagen\".",
                 memoryAuthorPh: "Tu nombre *", memoryUrlPh: "Enlace de la foto (URL, Drive) *",
                 memoryCaptionPh: "Escribe una anécdota o felicitación...", memoryPublish: "Publicar Recuerdo",
                 memoryOpenOriginal: "Abrir original", memoryDelete: "Eliminar",
@@ -976,6 +978,7 @@
                 tasksProgress: "complete", noTasks: "No pending tasks.",
                 memoriesTitle: "Chucho & Gloria's Memory Wall",
                 memoriesSubtitle: "Share photo links (Google Drive, Dropbox, Google Photos or a public URL) and leave a special message.",
+                memoriesUrlHint: "For Google Drive and Dropbox, paste the normal share link. For Google Photos (or if the image doesn't show), open the photo, right-click it and choose \"Copy image address\".",
                 memoryAuthorPh: "Your name *", memoryUrlPh: "Photo link (URL, Drive) *",
                 memoryCaptionPh: "Write an anecdote or congratulations...", memoryPublish: "Publish Memory",
                 memoryOpenOriginal: "Open original", memoryDelete: "Delete",
@@ -1724,7 +1727,7 @@
             grid.innerHTML = memories.map(m => `
                 <div class="rounded-2xl overflow-hidden border border-stone-200 bg-stone-50 flex flex-col shadow-sm">
                     <div class="aspect-video bg-stone-200 relative overflow-hidden">
-                        <img src="${escapeHtml(m.url)}" alt="${t('memoryAltPrefix')} ${escapeHtml(m.author)}"
+                        <img src="${escapeHtml(normalizePhotoUrl(m.url))}" alt="${t('memoryAltPrefix')} ${escapeHtml(m.author)}"
                              onerror="this.src='https://placehold.co/600x400/f5eedc/7b4827?text=${encodeURIComponent(t('memoryBrokenImage')).replace(/%20/g, '+')}'"
                              class="w-full h-full object-cover">
                         <a href="${escapeHtml(m.url)}" target="_blank" rel="noopener noreferrer"
@@ -1958,11 +1961,31 @@
             showToast(t('toastNoteAdded'), "success");
         };
 
+        function normalizePhotoUrl(url) {
+            if (!url) return url;
+            try {
+                const u = new URL(url);
+                if (u.hostname.indexOf('drive.google.com') !== -1) {
+                    const fileMatch = u.pathname.match(/\/file\/d\/([^/]+)/);
+                    const id = fileMatch ? fileMatch[1] : u.searchParams.get('id');
+                    if (id) return 'https://drive.google.com/uc?export=view&id=' + id;
+                }
+                if (u.hostname.indexOf('dropbox.com') !== -1) {
+                    u.searchParams.delete('dl');
+                    u.searchParams.set('raw', '1');
+                    return u.toString();
+                }
+                return url;
+            } catch (e) {
+                return url;
+            }
+        }
+
         window.handleAddMemory = async function(e) {
             e.preventDefault();
             const payload = {
                 author: document.getElementById('memory-author').value.trim(),
-                url: document.getElementById('memory-url').value.trim(),
+                url: normalizePhotoUrl(document.getElementById('memory-url').value.trim()),
                 caption: document.getElementById('memory-caption').value.trim(),
                 createdAt: Date.now()
             };
